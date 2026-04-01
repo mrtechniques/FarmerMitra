@@ -77,27 +77,10 @@ export default function Results({ result, onBack, onScanAgain, onAskAgent }: Res
         {/* Stats Strip */}
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-3 gap-4"
+          className="grid grid-cols-2 gap-4"
         >
-          {/* Confidence */}
-          <div className="p-6 rounded-xl border border-divider bg-surface" style={{ borderLeft: `4px solid ${statusColor}` }}>
-            <p className="text-xs text-text-secondary uppercase tracking-widest mb-1 font-semibold">{t('confidence')}</p>
-            <p className="text-4xl font-black text-text-primary">
-              {result.confidence}<span className="text-xl font-medium text-text-secondary">%</span>
-            </p>
-            <div className="mt-3 w-full bg-bg-nature h-1.5 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${result.confidence}%` }}
-                transition={{ duration: 1.2, delay: 0.3, ease: 'easeOut' }}
-                className="h-full rounded-full"
-                style={{ background: `linear-gradient(to right, ${statusColor}88, ${statusColor})` }}
-              />
-            </div>
-          </div>
-
           {/* Plant */}
-          <div className="p-6 rounded-xl border border-divider bg-surface">
+          <div className="p-6 rounded-xl border border-divider bg-surface" style={{ borderLeft: `4px solid ${statusColor}` }}>
             <p className="text-xs text-text-secondary uppercase tracking-widest mb-1 font-semibold">Plant</p>
             <p className="text-2xl font-bold text-text-primary">{result.leafType}</p>
           </div>
@@ -158,15 +141,8 @@ export default function Results({ result, onBack, onScanAgain, onAskAgent }: Res
               className="grid grid-cols-1 gap-3"
             >
               <button
-                onClick={onScanAgain}
-                className="w-full py-4 rounded-xl font-bold text-lg text-white transition-all hover:opacity-90 active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #2d5a1b, #4a8c2a)' }}
-              >
-                {t('saveHistory')}
-              </button>
-              <button
                 onClick={onAskAgent}
-                className="w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 border-2 border-deep-green text-deep-green hover:bg-deep-green hover:text-white transition-all active:scale-95 bg-white"
+                className="w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 border-2 border-deep-green text-deep-green hover:bg-deep-green hover:text-white transition-all active:scale-95 bg-white shadow-sm"
               >
                 <MessageSquare className="w-5 h-5" />
                 {t('askHelp')}
