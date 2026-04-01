@@ -717,8 +717,140 @@ def predict():
         log.error(f"Prediction error: {e}", exc_info=True)
         return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
 
+@app.route("/api/batch-predict", methods=["POST"])
+def batch_predict():
+    """
+    Accepts up to 15 photos with optional GPS coordinates and runs disease detection on each.
+    Computes adjacent-risk for healthy zones near diseased zones (100m Haversine radius).
+    """
+    if model is None:
+        return jsonify({"error": "Model not loaded. Check server logs."}), 503
 
-# ─── Startup ──────────────────────────────────────────────────────────────────
+    try:
+        import torch
+        import torch.nn.functional as F
+        import math
+
+        data = request.get_json(force=True)
+        if not data or "photos" not in data:
+            return jsonify({"error": "Missing 'photos' array in request body."}), 400
+
+        photos = data["photos"][:15]  # enforce max 15
+        lang = data.get("language", "en")
+
+        def haversine(lat1, lng1, lat2, lng2):
+            R = 6371000
+            phi1, phi2 = math.radians(lat1), math.radians(lat2)
+            d_phi = math.radians(lat2 - lat1)
+            d_lam = math.radians(lng2 - lng1)
+            a = math.sin(d_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lam / 2) ** 2
+            return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        results = []
+
+        for photo in photos:
+            entry = {
+                "label": photo.get("label", "Unknown"),
+                "lat": photo.get("lat"),
+                "lng": photo.get("lng"),
+                "adjacentRisk": False,
+                "protectiveActions": [],
+            }
+            try:
+                img = decode_image(photo["image"])
+                tensor = transform(img).unsqueeze(0)
+                with torch.no_grad():
+                    logits = model(tensor)
+                    probs = F.softmax(logits, dim=1)
+                    top_prob, top_idx = torch.topk(probs, k=3, dim=1)
+
+                best_class = CLASS_NAMES[top_idx[0][0].item()]
+                confidence = round(top_prob[0][0].item() * 100, 1)
+                plant, disease = class_name_to_label(best_class)
+                info = REMEDIES_DB.get(best_class, {
+                    "remedies": ["Consult a local agricultural expert."],
+                    "recovery": "Varies",
+                    "details": f"Detected: {disease} on {plant}.",
+                })
+                is_healthy = "healthy" in best_class.lower()
+                severity = "none" if is_healthy else ("high" if confidence > 80 else ("medium" if confidence > 60 else "low"))
+
+                entry.update({
+                    "disease": disease,
+                    "leafType": plant,
+                    "confidence": confidence,
+                    "isHealthy": is_healthy,
+                    "severity": severity,
+                    "remedies": info["remedies"],
+                    "recoveryTime": info["recovery"],
+                    "details": info["details"],
+                    "rawClass": best_class,
+                })
+                log.info(f"Batch photo '{entry['label']}': {best_class} ({confidence}%)")
+            except Exception as e:
+                entry["error"] = str(e)
+                log.warning(f"Batch photo '{entry['label']}' failed: {e}")
+
+            results.append(entry)
+
+        # ── Adjacent risk computation ──────────────────────────────────────
+        RISK_RADIUS_M = 100
+        diseased = [r for r in results if not r.get("isHealthy", True) and r.get("lat") is not None and r.get("lng") is not None]
+        healthy = [r for r in results if r.get("isHealthy", False) and r.get("lat") is not None and r.get("lng") is not None]
+
+        default_protective = [
+            "Apply preventive fungicide spray immediately.",
+            "Install physical barriers (nets/mulch) between fields.",
+            "Remove infected plant debris from nearby areas.",
+            "Monitor daily for early disease symptoms.",
+            "Avoid sharing tools between healthy and diseased sections.",
+        ]
+
+        for hz in healthy:
+            at_risk = any(
+                haversine(hz["lat"], hz["lng"], dz["lat"], dz["lng"]) <= RISK_RADIUS_M
+                for dz in diseased
+            )
+            if at_risk:
+                hz["adjacentRisk"] = True
+                # Try Gemini for protective actions
+                api_key = os.getenv("GEMINI_API_KEY", "")
+                gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+                if api_key:
+                    try:
+                        nearby_diseases = list({dz["disease"] for dz in diseased})
+                        prompt = (
+                            f"A healthy {hz['leafType']} field is within 100 meters of fields infected with: "
+                            f"{', '.join(nearby_diseases)}. "
+                            f"List exactly 5 brief, actionable protective measures to prevent the disease from spreading. "
+                            f"Return ONLY a JSON array of 5 strings, no markdown, no explanation."
+                        )
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={api_key}"
+                        body = {
+                            "contents": [{"parts": [{"text": prompt}]}],
+                            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 512},
+                        }
+                        res = requests.post(url, json=body, timeout=10)
+                        res.raise_for_status()
+                        raw = res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                        if raw.startswith("```"):
+                            raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+                        actions = json.loads(raw)
+                        if isinstance(actions, list) and all(isinstance(a, str) for a in actions):
+                            hz["protectiveActions"] = actions[:5]
+                            continue
+                    except Exception as ge:
+                        log.warning(f"Gemini protective actions failed: {ge}")
+                hz["protectiveActions"] = default_protective
+
+        return jsonify({"results": results})
+
+    except Exception as e:
+        log.error(f"Batch prediction error: {e}", exc_info=True)
+        return jsonify({"error": f"Batch prediction failed: {str(e)}"}), 500
+
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     log.info("=" * 60)

@@ -1,127 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Camera, X, Loader2, Image as ImageIcon, Wifi, WifiOff, Leaf, Eye } from 'lucide-react';
+import { Upload, Camera, X, Loader2, Image as ImageIcon, Leaf, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../hooks/useLanguage';
-
-// ─────────────────────────────────────────────────────────────
-// 1. SHARPNESS SCORE  (0 – 100)
-//    Laplacian variance normalised: variance ~500 → 100 pts
-//    Threshold to pass: 60 pts  (variance ≈ 300)
-// ─────────────────────────────────────────────────────────────
-function getSharpnessScore(dataUrl: string): Promise<number> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const scale = Math.min(1, 512 / Math.max(img.width, img.height));
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      let sum = 0, sumSq = 0, n = 0;
-      for (let y = 1; y < height - 1; y++) {
-        for (let x = 1; x < width - 1; x++) {
-          const i = (y * width + x) * 4;
-          const g = (px: number) => data[px] * 0.299 + data[px + 1] * 0.587 + data[px + 2] * 0.114;
-          const lap = 4 * g(i) - g(((y - 1) * width + x) * 4) - g(((y + 1) * width + x) * 4)
-            - g((y * width + x - 1) * 4) - g((y * width + x + 1) * 4);
-          sum += lap; sumSq += lap * lap; n++;
-        }
-      }
-      const variance = n > 0 ? (sumSq - (sum * sum) / n) / n : 0;
-      resolve(Math.min(100, Math.round(variance / 5)));   // 0–100
-    };
-    img.onerror = () => resolve(100);
-    img.src = dataUrl;
-  });
-}
-
-// ─────────────────────────────────────────────────────────────
-// 2. LEAF DETECTION
-//    • If GEMINI_API_KEY present → ask Gemini vision (most reliable)
-//    • Fallback → green-channel dominance heuristic
-// ─────────────────────────────────────────────────────────────
-async function checkIsLeaf(dataUrl: string): Promise<boolean> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
-
-  if (apiKey) {
-    try {
-      const base64 = dataUrl.split(',')[1];
-      const mime = dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
-      const prompt = 'Look at this image carefully. Does it show a plant leaf (healthy or diseased)? Reply with ONLY the single word YES or NO.';
-
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: prompt },
-                { inline_data: { mime_type: mime, data: base64 } },
-              ],
-            }],
-            generationConfig: { maxOutputTokens: 10, temperature: 0 },
-          }),
-        }
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        const rawAnswer = (data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim().toUpperCase();
-        console.log('[DEBUG] Leaf Detection AI response:', rawAnswer);
-
-        // Trust the AI fully — YES means leaf, NO means not a leaf.
-        // Only fall through to heuristic if the API call itself fails.
-        return /YES|LEAF|PLANT|TRUE/.test(rawAnswer);
-      } else {
-        const errBody = await res.json().catch(() => ({}));
-        console.warn('[WARN] Leaf Detection API returned error, falling back to heuristic:', errBody?.error?.message);
-      }
-    } catch (err) {
-      console.warn('[WARN] Leaf Detection AI call failed, falling back to heuristic:', err);
-    }
-  }
-
-  // ── Fallback colour heuristic (runs only when API is unavailable) ──────────
-  // Accepts healthy green, yellowing (chlorosis), and brown/diseased spots.
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 128; canvas.height = 128;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, 128, 128);
-      const { data } = ctx.getImageData(0, 0, 128, 128);
-      let leafPixels = 0, total = 0;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
-        if (a < 50) continue;
-        total++;
-
-        // 🌿 Healthy Green
-        const isGreen = g > r * 1.05 && g > b * 1.05 && g > 30;
-        // 🍂 Yellow Symptoms (chlorosis)
-        const isYellow = r > 100 && g > 100 && b < 100 && Math.abs(r - g) < 40;
-        // 🟫 Disease Spots (Brown/Dark blight)
-        const isBrown = r > 40 && g > 30 && b < 50 && r > b * 1.2;
-
-        if (isGreen || isYellow || isBrown) leafPixels++;
-      }
-
-      const leafRatio = total > 0 ? leafPixels / total : 0;
-      console.log('[DEBUG] Leaf Heuristic ratio:', leafRatio);
-      // Require at least 12% of leaf-coloured pixels
-      resolve(leafRatio >= 0.12);
-    };
-    img.onerror = () => resolve(true); // can't check → let it through
-    img.src = dataUrl;
-  });
-}
+import FieldMapSection from '../components/FieldMapSection';
+import { getSharpnessScore, checkIsLeaf } from '../utils/imageValidation';
 
 // ─────────────────────────────────────────────────────────────
 // 3. VALIDATION MODAL
@@ -475,6 +357,26 @@ export default function Scan({ onAnalyze, analyzeError }: ScanProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Large Farm Survey ─────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mt-20"
+      >
+        {/* Divider */}
+        <div className="flex items-center gap-4 mb-8">
+          <div className="flex-1 h-px bg-divider" />
+          <div className="flex items-center gap-2 px-4 py-2 bg-surface-alt border border-divider rounded-full text-sm font-bold text-text-secondary">
+            <span className="text-lg">🌾</span>
+            Large Farm? Survey multiple fields at once
+          </div>
+          <div className="flex-1 h-px bg-divider" />
+        </div>
+
+        <FieldMapSection />
+      </motion.div>
     </div>
   );
 }
