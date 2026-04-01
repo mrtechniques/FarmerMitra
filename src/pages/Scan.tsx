@@ -44,36 +44,50 @@ function getSharpnessScore(dataUrl: string): Promise<number> {
 // ─────────────────────────────────────────────────────────────
 async function checkIsLeaf(dataUrl: string): Promise<boolean> {
   const apiKey = process.env.GEMINI_API_KEY;
+  const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 
   if (apiKey) {
     try {
       const base64 = dataUrl.split(',')[1];
       const mime = dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
+      const prompt = 'Look at this image carefully. Does it show a plant leaf (healthy or diseased)? Reply with ONLY the single word YES or NO.';
+
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{
               parts: [
-                { text: 'Is this image showing a plant leaf (or part of a leaf)? Reply with only YES or NO.' },
+                { text: prompt },
                 { inline_data: { mime_type: mime, data: base64 } },
               ],
             }],
-            generationConfig: { maxOutputTokens: 4, temperature: 0 },
+            generationConfig: { maxOutputTokens: 10, temperature: 0 },
           }),
         }
       );
-      const data = await res.json();
-      const answer = (data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim().toUpperCase();
-      return answer.startsWith('YES');
-    } catch {
-      // API failed → fall through to heuristic
+
+      if (res.ok) {
+        const data = await res.json();
+        const rawAnswer = (data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim().toUpperCase();
+        console.log('[DEBUG] Leaf Detection AI response:', rawAnswer);
+
+        // Trust the AI fully — YES means leaf, NO means not a leaf.
+        // Only fall through to heuristic if the API call itself fails.
+        return /YES|LEAF|PLANT|TRUE/.test(rawAnswer);
+      } else {
+        const errBody = await res.json().catch(() => ({}));
+        console.warn('[WARN] Leaf Detection API returned error, falling back to heuristic:', errBody?.error?.message);
+      }
+    } catch (err) {
+      console.warn('[WARN] Leaf Detection AI call failed, falling back to heuristic:', err);
     }
   }
 
-  // Colour heuristic: ≥ 18 % of pixels are "plant-green-ish"
+  // ── Fallback colour heuristic (runs only when API is unavailable) ──────────
+  // Accepts healthy green, yellowing (chlorosis), and brown/diseased spots.
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -82,18 +96,27 @@ async function checkIsLeaf(dataUrl: string): Promise<boolean> {
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(img, 0, 0, 128, 128);
       const { data } = ctx.getImageData(0, 0, 128, 128);
-      let greenish = 0, total = 0;
+      let leafPixels = 0, total = 0;
+
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
         if (a < 50) continue;
         total++;
-        // plant-like: green dominant, OR yellow/brown (diseased)
-        const isGreen = g > r * 1.15 && g > b * 1.1 && g > 40;
-        const isYellow = r > 120 && g > 100 && b < 80 && r > b * 1.5;
-        const isBrown = r > 80 && g > 50 && b < 60 && r > g * 1.1;
-        if (isGreen || isYellow || isBrown) greenish++;
+
+        // 🌿 Healthy Green
+        const isGreen = g > r * 1.05 && g > b * 1.05 && g > 30;
+        // 🍂 Yellow Symptoms (chlorosis)
+        const isYellow = r > 100 && g > 100 && b < 100 && Math.abs(r - g) < 40;
+        // 🟫 Disease Spots (Brown/Dark blight)
+        const isBrown = r > 40 && g > 30 && b < 50 && r > b * 1.2;
+
+        if (isGreen || isYellow || isBrown) leafPixels++;
       }
-      resolve(total > 0 && greenish / total >= 0.18);
+
+      const leafRatio = total > 0 ? leafPixels / total : 0;
+      console.log('[DEBUG] Leaf Heuristic ratio:', leafRatio);
+      // Require at least 12% of leaf-coloured pixels
+      resolve(leafRatio >= 0.12);
     };
     img.onerror = () => resolve(true); // can't check → let it through
     img.src = dataUrl;
@@ -114,6 +137,7 @@ function ValidationModal({
   score?: number;
   onRetry: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -139,19 +163,19 @@ function ValidationModal({
         </div>
 
         <h2 className="text-2xl font-black text-text-primary mb-3">
-          {type === 'not-leaf' ? 'No Leaf Detected' : 'Image Too Blurry'}
+          {type === 'not-leaf' ? t('noLeafTitle') : t('blurryTitle')}
         </h2>
 
         <p className="text-text-secondary text-base leading-relaxed mb-2">
           {type === 'not-leaf'
-            ? 'The uploaded image does not appear to contain a plant leaf. Please upload a clear photo of a leaf for accurate disease detection.'
-            : 'Your image is too blurry for a reliable diagnosis.'}
+            ? t('noLeafSub')
+            : t('blurrySub')}
         </p>
 
         {type === 'blurry' && score !== undefined && (
           <div className="my-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">Sharpness Score</span>
+              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">{t('sharpnessScore')}</span>
               <span className={`text-lg font-black ${score >= 60 ? 'text-deep-green' : 'text-red-500'}`}>{score}/100</span>
             </div>
             <div className="w-full bg-bg-nature h-3 rounded-full overflow-hidden shadow-inner">
@@ -162,21 +186,21 @@ function ValidationModal({
                 className={`h-full rounded-full ${score >= 60 ? 'bg-accent-green' : 'bg-red-400'}`}
               />
             </div>
-            <p className="text-xs text-text-secondary mt-2">Minimum required: <strong>60/100</strong></p>
+            <p className="text-xs text-text-secondary mt-2">{t('minRequired')}: <strong>60/100</strong></p>
           </div>
         )}
 
         <p className="text-text-secondary text-sm leading-relaxed mb-8">
           {type === 'not-leaf'
-            ? 'Tips: Make sure the leaf fills most of the frame and the background is minimal.'
-            : 'Tips: Hold your camera steady, ensure good lighting, and tap the leaf to focus before capturing.'}
+            ? t('noLeafTips')
+            : t('blurryTips')}
         </p>
 
         <button
           onClick={onRetry}
           className="w-full bg-deep-green text-white py-4 rounded-full font-bold text-lg hover:bg-muted-green transition-all shadow-xl active:scale-95"
         >
-          {type === 'not-leaf' ? '📷  Upload Another Image' : '🔄  Try Again'}
+          {type === 'not-leaf' ? `📷 ${t('uploadAnother')}` : `🔄 ${t('tryAgain')}`}
         </button>
       </motion.div>
     </motion.div>
@@ -343,8 +367,8 @@ export default function Scan({ onAnalyze, analyzeError }: ScanProps) {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-text-primary">Checking image quality…</p>
-                  <p className="text-text-secondary mt-1">Detecting leaf and measuring sharpness</p>
+                  <p className="text-xl font-bold text-text-primary">{t('checkingQuality')}</p>
+                  <p className="text-text-secondary mt-1">{t('detectingLeaf')}</p>
                 </div>
               </motion.div>
 
@@ -424,9 +448,9 @@ export default function Scan({ onAnalyze, analyzeError }: ScanProps) {
                 className="flex items-start gap-4 p-5 bg-red-50 border border-red-200 rounded-[1.5rem] text-red-700">
                 <span className="text-2xl shrink-0">⚠️</span>
                 <div>
-                  <p className="font-bold text-lg mb-1">Analysis Failed</p>
+                  <p className="font-bold text-lg mb-1">{t('analysisFailed')}</p>
                   <p className="text-sm leading-relaxed">{analyzeError}</p>
-                  <p className="text-xs mt-2 text-red-500">Make sure the Python backend server is running.</p>
+                  <p className="text-xs mt-2 text-red-500">{t('ensureBackend')}</p>
                 </div>
               </motion.div>
             )}

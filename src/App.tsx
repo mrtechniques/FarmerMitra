@@ -13,7 +13,7 @@ import Results from './pages/Results';
 import History from './pages/History';
 import Agent from './pages/Agent';
 import { Page, ScanResult } from './types';
-import { LanguageProvider } from './hooks/useLanguage';
+import { LanguageProvider, useLanguage } from './hooks/useLanguage';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -21,6 +21,7 @@ function AppContent() {
   const [currentResult, setCurrentResult] = useState<ScanResult | null>(null);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [agentContext, setAgentContext] = useState<ScanResult | null>(null);
+  const { language } = useLanguage();
 
   const handleAnalyze = async (image: string): Promise<void> => {
     setAnalyzeError(null);
@@ -28,7 +29,7 @@ function AppContent() {
       const response = await fetch('/api/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image }),
+        body: JSON.stringify({ image, language }),
       });
 
       if (!response.ok) {

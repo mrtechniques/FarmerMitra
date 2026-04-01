@@ -57,9 +57,6 @@ export default function Home({ onStartScan, onChatAgent }: HomeProps) {
                   {t('startScan')}
                   <ArrowRight className="w-5 h-5" />
                 </button>
-                <button className="neumorphic-btn font-bold text-deep-green">
-                  {t('howItWorks')}
-                </button>
               </div>
             </motion.div>
           </div>

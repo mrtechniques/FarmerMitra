@@ -76,16 +76,16 @@ export default function History({ scans, onViewResult, onStartScan }: HistoryPro
                   className="w-24 h-24 rounded-[1.5rem] object-cover shadow-md group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className={`absolute -top-2 -right-2 w-6 h-6 rounded-full border-4 border-white shadow-sm ${
-                  scan.disease === 'Healthy' ? 'bg-accent-green' : 'bg-red-500'
+                  scan.rawClass?.includes('healthy') ? 'bg-accent-green' : 'bg-red-500'
                 }`} />
               </div>
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2">
                   <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                    scan.disease === 'Healthy' ? 'bg-accent-green/20 text-deep-green' : 'bg-red-50 text-red-600'
+                    scan.rawClass?.includes('healthy') ? 'bg-accent-green/20 text-deep-green' : 'bg-red-50 text-red-600'
                   }`}>
-                    {scan.disease === 'Healthy' ? t('healthy') : t('diseased')}
+                    {scan.rawClass?.includes('healthy') ? t('healthy') : t('diseased')}
                   </span>
                   <span className="text-xs text-text-secondary flex items-center gap-1.5 font-medium">
                     <Calendar className="w-4 h-4" />

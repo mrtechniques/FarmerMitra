@@ -10,9 +10,11 @@ import os
 import sys
 import io
 import base64
+import json
 import logging
 from pathlib import Path
 
+import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -238,6 +240,56 @@ REMEDIES_DB = {
         "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
     },
 }
+
+
+LANGUAGE_NAMES = {
+    "hi": "Hindi",
+    "kn": "Kannada",
+    "ml": "Malayalam",
+}
+
+
+def translate_result(disease: str, leaf_type: str, details: str, remedies: list, recovery: str, lang: str) -> dict:
+    """
+    Translate disease result fields into the requested language using Gemini.
+    Only called when lang != 'en'. Returns translated dict or falls back to English.
+    """
+    api_key = os.getenv("GEMINI_API_KEY", "")
+    model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+    if not api_key or lang not in LANGUAGE_NAMES:
+        return {"disease": disease, "leafType": leaf_type, "details": details, "remedies": remedies, "recoveryTime": recovery}
+
+    lang_name = LANGUAGE_NAMES[lang]
+    remedies_str = "\n".join(f"- {r}" for r in remedies)
+    prompt = f"""Translate the following agricultural disease information strictly into {lang_name}. Return ONLY valid JSON with these exact keys: disease, leafType, details, remedies (array of strings), recoveryTime. Do not add extra keys, markdown, or explanation.
+
+Source JSON:
+{{"disease": "{disease}", "leafType": "{leaf_type}", "details": "{details}", "remedies": {json.dumps(remedies)}, "recoveryTime": "{recovery}"}}"""
+
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        body = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.1, "maxOutputTokens": 1024},
+        }
+        res = requests.post(url, json=body, timeout=15)
+        res.raise_for_status()
+        raw = res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        # Strip markdown code fences if present
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+        translated = json.loads(raw)
+        # Ensure all expected keys exist; fall back field-by-field
+        return {
+            "disease": translated.get("disease", disease),
+            "leafType": translated.get("leafType", leaf_type),
+            "details": translated.get("details", details),
+            "remedies": translated.get("remedies", remedies),
+            "recoveryTime": translated.get("recoveryTime", recovery),
+        }
+    except Exception as e:
+        log.warning(f"Translation failed ({lang}): {e}")
+        return {"disease": disease, "leafType": leaf_type, "details": details, "remedies": remedies, "recoveryTime": recovery}
 
 
 # ─── Custom Model Architecture ────────────────────────────────────────────────
@@ -608,11 +660,11 @@ def predict():
         top3 = []
         for i in range(3):
             cls = CLASS_NAMES[top_idx[0][i].item()]
-            plant, disease = class_name_to_label(cls)
+            plant_i, disease_i = class_name_to_label(cls)
             top3.append({
                 "class": cls,
-                "plant": plant,
-                "disease": disease,
+                "plant": plant_i,
+                "disease": disease_i,
                 "confidence": round(top_prob[0][i].item() * 100, 1),
             })
 
@@ -629,13 +681,34 @@ def predict():
 
         log.info(f"Prediction: {best_class} ({confidence}%)")
 
+        # ── Translation ──────────────────────────────────────────────────────
+        lang = data.get("language", "en")
+        if lang and lang != "en":
+            log.info(f"Translating result into: {lang}")
+            translated = translate_result(
+                disease=disease,
+                leaf_type=plant,
+                details=info["details"],
+                remedies=info["remedies"],
+                recovery=info["recovery"],
+                lang=lang,
+            )
+        else:
+            translated = {
+                "disease": disease,
+                "leafType": plant,
+                "details": info["details"],
+                "remedies": info["remedies"],
+                "recoveryTime": info["recovery"],
+            }
+
         return jsonify({
-            "disease": disease,
-            "leafType": plant,
+            "disease": translated["disease"],
+            "leafType": translated["leafType"],
             "confidence": confidence,
-            "remedies": info["remedies"],
-            "recoveryTime": info["recovery"],
-            "details": info["details"],
+            "remedies": translated["remedies"],
+            "recoveryTime": translated["recoveryTime"],
+            "details": translated["details"],
             "rawClass": best_class,
             "top3": top3,
         })

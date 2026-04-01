@@ -18,12 +18,13 @@ interface AgentProps {
 }
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
 const QUICK_PROMPTS = [
-  { icon: Bug, label: 'Diagnose my plant', text: 'How do I identify what disease my plant has?' },
-  { icon: Droplets, label: 'Watering tips', text: 'How often should I water my crop?' },
-  { icon: Sprout, label: 'Soil health', text: 'How do I improve my soil health?' },
-  { icon: Sun, label: 'Best practices', text: 'What are the best practices for preventing plant diseases?' },
+  { icon: Bug, label: 'diagPlant', text: 'diagPlantQuery' },
+  { icon: Droplets, label: 'waterTips', text: 'waterTipsQuery' },
+  { icon: Sprout, label: 'soilHealth', text: 'soilHealthQuery' },
+  { icon: Sun, label: 'bestPractices', text: 'bestPracticesQuery' },
 ];
 
 async function callGemini(
@@ -34,7 +35,7 @@ async function callGemini(
     return "⚠️ Gemini API key not configured. Please add GEMINI_API_KEY to your .env file to enable AI responses.";
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -232,13 +233,13 @@ Keep responses concise (2-4 sentences), friendly, and practical. Use simple lang
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.06 }}
-                    onClick={() => sendMessage(prompt.text)}
+                    onClick={() => sendMessage(t(prompt.text))}
                     className="flex flex-col items-start gap-2 p-4 bg-white border border-divider rounded-2xl text-left hover:border-muted-green hover:shadow-md transition-all group active:scale-95"
                   >
                     <div className="w-9 h-9 bg-bg-nature rounded-xl flex items-center justify-center group-hover:bg-accent-green/20 transition-colors">
                       <prompt.icon className="w-5 h-5 text-deep-green" />
                     </div>
-                    <span className="text-sm font-bold text-text-primary leading-tight">{prompt.label}</span>
+                    <span className="text-sm font-bold text-text-primary leading-tight">{t(prompt.label)}</span>
                   </motion.button>
                 ))}
               </motion.div>

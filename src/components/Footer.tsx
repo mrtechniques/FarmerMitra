@@ -17,7 +17,7 @@ export default function Footer() {
               <span className="font-black text-3xl tracking-wide">Farmer Mitra</span>
             </div>
             <p className="text-white/70 leading-relaxed text-lg max-w-md">
-              {t('footerDesc')}
+              Empowering farmers with smart technology for healthier crops and better yields.
             </p>
           </div>
 
@@ -41,7 +41,7 @@ export default function Footer() {
         </div>
 
         <div className="pt-12 border-t border-white/10 text-center text-sm text-white/40 font-medium tracking-widest uppercase">
-          © {new Date().getFullYear()} Farmer Mitra. {t('rights')}
+          © {new Date().getFullYear()} Farmer Mitra. All rights reserved.
         </div>
       </div>
       {/* Decorative Background Elements */}
