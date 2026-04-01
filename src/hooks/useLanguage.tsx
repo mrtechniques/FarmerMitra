@@ -18,9 +18,9 @@ export const translations: Translations = {
   // Home Page
   tagline: { en: 'Smart Farming Assistant', hi: 'स्मार्ट खेती सहायक', kn: 'ಸ್ಮಾರ್ಟ್ ಕೃಷಿ ಸಹಾಯಕ', ml: 'സ്മാർട്ട് ഫാമിംഗ് അസിസ്റ്റന്റ്' },
   heroTitle: { en: 'Keep Your Crops Healthy & Strong', hi: 'अपनी फसलों को स्वस्थ और मजबूत रखें', kn: 'ನಿಮ್ಮ ಬೆಳೆಗಳನ್ನು ಆರೋಗ್ಯಕರವಾಗಿ ಮತ್ತು ಬಲವಾಗಿಡಿ', ml: 'നിങ്ങളുടെ വിളകളെ ആരോഗ്യകരവും ശക്തവുമായി നിലനിർത്തുക' },
-  heroSub: { en: 'Identify plant diseases instantly with FarmerMitra. Just snap a photo and get expert recovery insights.', hi: 'FarmerMitra के साथ तुरंत पौधों की बीमारियों की पहचान करें। बस एक फोटो लें और विशेषज्ञ रिकवरी अंतर्दृष्टि प्राप्त करें।', kn: 'FarmerMitra ನೊಂದಿಗೆ ಸಸ್ಯ ರೋಗಗಳನ್ನು ತಕ್ಷಣವೇ ಗುರುತಿಸಿ. ಕೇವಲ ಫೋಟೋ ತೆಗೆಯಿರಿ ಮತ್ತು ತಜ್ಞರ ಚೇತರಿಕೆಯ ಒಳನೋಟಗಳನ್ನು ಪಡೆಯಿರಿ.', ml: 'FarmerMitra ഉപയോഗിച്ച് സസ്യരോഗങ്ങൾ തൽക്ഷണം തിരിച്ചറിയുക. ഒരു ഫോട്ടോ എടുത്ത് വിദഗ്ദ്ധ വീണ്ടെടുക്കൽ സ്ഥിതിവിവരക്കണക്കുകൾ നേടുക.' },
+  heroSub: { en: 'Identify plant diseases instantly with Farmer Mitra. Just snap a photo and get expert recovery insights.', hi: 'Farmer Mitra के साथ तुरंत पौधों की बीमारियों की पहचान करें। बस एक फोटो लें और विशेषज्ञ रिकवरी अंतर्दृष्टि प्राप्त करें।', kn: 'Farmer Mitra ನೊಂದಿಗೆ ಸಸ್ಯ ರೋಗಗಳನ್ನು ತಕ್ಷಣವೇ ಗುರುತಿಸಿ. ಕೇವಲ ಫೋಟೋ ತೆಗೆಯಿರಿ ಮತ್ತು ತಜ್ಞರ ಚೇತರಿಕೆಯ ಒಳನೋಟಗಳನ್ನು ಪಡೆಯಿರಿ.', ml: 'Farmer Mitra ഉപയോഗിച്ച് സസ്യരോഗങ്ങൾ തൽക്ഷണം തിരിച്ചറിയുക. ഒരു ഫോട്ടോ എടുത്ത് വിദഗ്ദ്ധ വീണ്ടെടുക്കൽ സ്ഥിതിവിവരക്കണക്കുകൾ നേടുക.' },
   startScan: { en: 'Start Leaf Scan', hi: 'लीफ स्कैन शुरू करें', kn: 'ಎಲೆ ಸ್ಕ್ಯಾನ್ ಪ್ರಾರಂಭಿಸಿ', ml: 'ലീഫ് സ്കാൻ ആരംഭിക്കുക' },
-  whyTitle: { en: 'Why FarmerMitra?', hi: 'FarmerMitra क्यों?', kn: 'FarmerMitra ಏಕೆ?', ml: 'എന്തുകൊണ്ട് FarmerMitra?' },
+  whyTitle: { en: 'Why Farmer Mitra?', hi: 'Farmer Mitra क्यों?', kn: 'Farmer Mitra ಏಕೆ?', ml: 'എന്തുകൊണ്ട് Farmer Mitra?' },
   whySub: { en: 'We combine agricultural expertise with cutting-edge technology to help you grow better.', hi: 'हम आपको बेहतर विकसित करने में मदद करने के लिए अत्याधुनिक तकनीक के साथ कृषि विशेषज्ञता को जोड़ते हैं।', kn: 'ನಿಮಗೆ ಉತ್ತಮವಾಗಿ ಬೆಳೆಯಲು ಸಹಾಯ ಮಾಡಲು ನಾವು ಕೃಷಿ ಪರಿಣತಿಯನ್ನು ಅತ್ಯಾಧುನಿಕ ತಂತ್ರಜ್ಞಾನದೊಂದಿಗೆ ಸಂಯೋಜಿಸುತ್ತೇವೆ.', ml: 'മികച്ച രീതിയിൽ വളരാൻ നിങ്ങളെ സഹായിക്കുന്നതിന് ഞങ്ങൾ കാർഷിക വൈദഗ്ധ്യവും അത്യാധുനിക സാങ്കേതികവിദ്യയും സംയോജിപ്പിക്കുന്നു.' },
   feat1Title: { en: 'Instant Detection', hi: 'त्वरित पहचान', kn: 'ತತ್ಕ್ಷಣ ಪತ್ತೆ', ml: 'തൽക്ഷണ കണ്ടെത്തൽ' },
   feat1Sub: { en: 'Upload a photo and get results in seconds using advanced AI.', hi: 'उन्नत AI का उपयोग करके फोटो अपलोड करें और सेकंड में परिणाम प्राप्त करें।', kn: 'ಸುಧಾರಿತ AI ಬಳಸಿ ಫೋಟೋ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ ಮತ್ತು ಸೆಕೆಂಡುಗಳಲ್ಲಿ ಫಲಿತಾಂಶಗಳನ್ನು ಪಡೆಯಿರಿ.', ml: 'നൂതന AI ഉപയോഗിച്ച് ഒരു ഫോട്ടോ അപ്‌ലോഡ് ചെയ്ത് നിമിഷങ്ങൾക്കുള്ളിൽ ഫലങ്ങൾ നേടുക.' },
@@ -45,6 +45,9 @@ export const translations: Translations = {
   tip2: { en: 'Focus on the affected part of the leaf', hi: 'पत्ती के प्रभावित हिस्से पर ध्यान दें', kn: 'ಎಲೆಯ ಪೀಡಿತ ಭಾಗದ ಮೇಲೆ ಕೇಂದ್ರೀಕರಿಸಿ', ml: 'ഇലയുടെ ബാധിച്ച ഭാഗത്ത് ശ്രദ്ധ കേന്ദ്രീകരിക്കുക' },
   tip3: { en: 'Avoid blurry or dark images', hi: 'धुंधली या अंधेरी छवियों से बचें', kn: 'ಮಸುಕಾದ ಅಥವಾ ಗಾಢವಾದ ಚಿತ್ರಗಳನ್ನು ತಪ್ಪಿಸಿ', ml: 'മങ്ങിയതോ ഇരുണ്ടതോ ആയ ചിത്രങ്ങൾ ഒഴിവാക്കുക' },
   tip4: { en: 'Place the leaf on a plain background if possible', hi: 'यदि संभव हो तो पत्ती को सादे पृष्ठभूमि पर रखें', kn: 'ಸಾಧ್ಯವಾದರೆ ಎಲೆಯನ್ನು ಸರಳ ಹಿನ್ನೆಲೆಯಲ್ಲಿ ಇರಿಸಿ', ml: 'സാധ്യമാണെങ്കിൽ ഇല ഒരു പ്ലെയിൻ പശ്ചാത്തലത്തിൽ വയ്ക്കുക' },
+  supportsFormat: { en: 'Supports JPG, PNG up to 10MB', hi: '10MB तक JPG, PNG का समर्थन करता है', kn: '10MB ವರೆಗಿನ JPG, PNG ಬೆಂಬಲಿಸುತ್ತದೆ', ml: '10MB വരെയുള്ള JPG, PNG പിന്തുണയ്ക്കുന്നു' },
+  capturingLocation: { en: 'Capturing location...', hi: 'स्थान कैप्चर किया जा रहा है...', kn: 'ಸ್ಥಳವನ್ನು ಸೆರೆಹಿಡಿಯಲಾಗುತ್ತಿದೆ...', ml: 'സ്ഥലം പിടിച്ചെടുക്കുന്നു...' },
+  locationNotAvailable: { en: 'Location not available', hi: 'स्थान उपलब्ध नहीं है', kn: 'ಸ್ಥಳ ಲಭ್ಯವಿಲ್ಲ', ml: 'സ്ഥലം ലഭ്യമല്ല' },
 
   // Results Page
   backToScan: { en: 'Back to Scan', hi: 'स्कैन पर वापस जाएं', kn: 'ಸ್ಕ್ಯಾನ್‌ಗೆ ಹಿಂತಿರುಗಿ', ml: 'തിരികെ സ്കാനിലേക്ക്' },
@@ -69,10 +72,10 @@ export const translations: Translations = {
   diseased: { en: 'Diseased', hi: 'बीमार', kn: 'ರೋಗಗ್ರಸ್ತ', ml: 'രോഗം ബാധിച്ചത്' },
 
   // Agent Page
-  agentTitle: { en: 'FarmerMitra AI', hi: 'FarmerMitra AI', kn: 'FarmerMitra AI', ml: 'FarmerMitra AI' },
+  agentTitle: { en: 'Farmer Mitra AI', hi: 'Farmer Mitra AI', kn: 'Farmer Mitra AI', ml: 'Farmer Mitra AI' },
   online: { en: 'Online', hi: 'ऑनलाइन', kn: 'ಆನ್‌ಲೈನ್', ml: 'ഓൺലൈൻ' },
   askAnything: { en: 'Ask anything about your crops...', hi: 'अपनी फसलों के बारे में कुछ भी पूछें...', kn: 'ನಿಮ್ಮ ಬೆಳೆಗಳ ಬಗ್ಗೆ ಏನನ್ನಾದರೂ ಕೇಳಿ...', ml: 'നിങ്ങളുടെ വിളകളെക്കുറിച്ച് എന്തും ചോദിക്കുക...' },
-  botWelcome: { en: "Hello! I'm FarmerMitra AI. How can I help you with your crops today?", hi: "नमस्ते! मैं FarmerMitra AI हूँ। आज मैं आपकी फसलों में आपकी कैसे मदद कर सकता हूँ?", kn: "ನಮಸ್ಕಾರ! ನಾನು FarmerMitra AI. ಇಂದು ನಿಮ್ಮ ಬೆಳೆಗಳಿಗೆ ನಾನು ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಹುದು?", ml: "ഹലോ! ഞാൻ FarmerMitra AI ആണ്. ഇന്ന് നിങ്ങളുടെ വിളകളുടെ കാര്യത്തിൽ എനിക്ക് എങ്ങനെ സഹായിക്കാനാകും?" },
+  botWelcome: { en: "Hello! I'm Farmer Mitra AI. How can I help you with your crops today?", hi: "नमस्ते! मैं Farmer Mitra AI हूँ। आज मैं आपकी फसलों में आपकी कैसे मदद कर सकता हूँ?", kn: "ನಮಸ್ಕಾರ! ನಾನು Farmer Mitra AI. ಇಂದು ನಿಮ್ಮ ಬೆಳೆಗಳಿಗೆ ನಾನು ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಹುದು?", ml: "ഹലോ! ഞാൻ Farmer Mitra AI ആണ്. ഇന്ന് നിങ്ങളുടെ വിളകളുടെ കാര്യത്തിൽ എനിക്ക് എങ്ങനെ സഹായിക്കാനാകും?" },
 
   // Shop
   shop: { en: 'Shop', hi: 'दुकान', kn: 'ಅಂಗಡಿ', ml: 'ഷോപ്പ്' },

@@ -5,9 +5,10 @@ import { useLanguage } from '../hooks/useLanguage';
 
 interface HomeProps {
   onStartScan: () => void;
+  onChatAgent: () => void;
 }
 
-export default function Home({ onStartScan }: HomeProps) {
+export default function Home({ onStartScan, onChatAgent }: HomeProps) {
   const { t } = useLanguage();
 
   const features = [
@@ -126,7 +127,7 @@ export default function Home({ onStartScan }: HomeProps) {
               {t('adviceSub')}
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center">
-              <button className="bg-white text-deep-green px-10 py-5 rounded-full font-bold text-lg hover:bg-surface-alt transition-all shadow-xl flex items-center gap-3">
+              <button onClick={onChatAgent} className="bg-white text-deep-green px-10 py-5 rounded-full font-bold text-lg hover:bg-surface-alt transition-all shadow-xl flex items-center gap-3">
                 <MessageSquare className="w-6 h-6" />
                 {t('chatAgent')}
               </button>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingCart, Search, Filter, ChevronRight, Star, Plus } from 'lucide-react';
+import { Search, Filter, ChevronRight, Star } from 'lucide-react';
 import { useLanguage } from '../hooks/useLanguage';
 
 interface Product {
@@ -118,9 +118,6 @@ export default function Shop() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xl font-bold text-deep-green">${product.price}</span>
-                      <button className="p-3 bg-deep-green text-white rounded-xl shadow-lg hover:bg-muted-green transition-all active:scale-95">
-                        <Plus className="w-5 h-5" />
-                      </button>
                     </div>
                   </div>
                 </motion.div>

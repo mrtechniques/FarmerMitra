@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Leaf, Home, History, MessageSquare, Scan, Globe, ChevronDown, ShoppingBag, Bot } from 'lucide-react';
+import { Leaf, Home, History, MessageSquare, Scan, Globe, ChevronDown, Bot } from 'lucide-react';
 import { Page } from '../types';
 import { useLanguage, Language } from '../hooks/useLanguage';
 import { motion, AnimatePresence } from 'motion/react';
@@ -7,16 +7,14 @@ import { motion, AnimatePresence } from 'motion/react';
 interface NavbarProps {
   currentPage: Page;
   onPageChange: (page: Page) => void;
-  onOpenCart: () => void;
 }
 
-export default function Navbar({ currentPage, onPageChange, onOpenCart }: NavbarProps) {
+export default function Navbar({ currentPage, onPageChange }: NavbarProps) {
   const { language, setLanguage, t } = useLanguage();
   const [isLangOpen, setIsLangOpen] = useState(false);
 
   const navItems = [
     { id: 'home', label: t('home'), icon: Home },
-    { id: 'shop', label: t('shop'), icon: ShoppingBag },
     { id: 'scan', label: t('scan'), icon: Scan },
     { id: 'history', label: t('history'), icon: History },
     { id: 'agent', label: t('agent'), icon: Bot },
@@ -39,7 +37,7 @@ export default function Navbar({ currentPage, onPageChange, onOpenCart }: Navbar
           <div className="bg-deep-green p-2 rounded-xl transition-transform group-hover:rotate-12">
             <Bot className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-xl text-deep-green tracking-tight hidden sm:block">FarmerMitra</span>
+          <span className="font-bold text-xl text-deep-green tracking-wide hidden sm:block">Farmer Mitra</span>
         </div>
 
         <div className="flex items-center gap-4 md:gap-8">
@@ -63,14 +61,6 @@ export default function Navbar({ currentPage, onPageChange, onOpenCart }: Navbar
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            {/* Cart Button */}
-            <button 
-              onClick={onOpenCart}
-              className="p-2.5 bg-surface rounded-xl shadow-neumorphic text-deep-green hover:bg-muted-green hover:text-white transition-all active:scale-95"
-            >
-              <ShoppingBag className="w-5 h-5" />
-            </button>
-
             {/* Language Selector */}
             <div className="relative">
               <button 

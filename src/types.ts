@@ -1,4 +1,11 @@
-export type Page = 'home' | 'shop' | 'scan' | 'results' | 'history' | 'agent';
+export type Page = 'home' | 'scan' | 'results' | 'history' | 'agent';
+
+export interface Top3Prediction {
+  class: string;
+  plant: string;
+  disease: string;
+  confidence: number;
+}
 
 export interface ScanResult {
   id: string;
@@ -10,4 +17,6 @@ export interface ScanResult {
   remedies: string[];
   recoveryTime: string;
   details: string;
+  rawClass?: string;
+  top3?: Top3Prediction[];
 }

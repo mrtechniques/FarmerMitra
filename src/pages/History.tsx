@@ -7,9 +7,10 @@ import { useLanguage } from '../hooks/useLanguage';
 interface HistoryProps {
   scans: ScanResult[];
   onViewResult: (result: ScanResult) => void;
+  onStartScan: () => void;
 }
 
-export default function History({ scans, onViewResult }: HistoryProps) {
+export default function History({ scans, onViewResult, onStartScan }: HistoryProps) {
   const { t } = useLanguage();
 
   return (
@@ -53,7 +54,7 @@ export default function History({ scans, onViewResult }: HistoryProps) {
           </div>
           <h3 className="text-2xl font-bold text-text-primary mb-4">{t('noScans')}</h3>
           <p className="text-text-secondary mb-10 text-lg max-w-md mx-auto">{t('noScansSub')}</p>
-          <button className="bg-deep-green text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-muted-green transition-all shadow-xl active:scale-95">
+          <button onClick={onStartScan} className="bg-deep-green text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-muted-green transition-all shadow-xl active:scale-95">
             {t('firstScan')}
           </button>
         </motion.div>

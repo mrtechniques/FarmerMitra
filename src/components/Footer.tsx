@@ -14,46 +14,34 @@ export default function Footer() {
               <div className="p-2 bg-accent-green rounded-xl shadow-lg">
                 <Leaf className="w-8 h-8 text-deep-green" />
               </div>
-              <span className="font-black text-3xl tracking-tighter">FarmerMitra</span>
+              <span className="font-black text-3xl tracking-wide">Farmer Mitra</span>
             </div>
             <p className="text-white/70 leading-relaxed text-lg max-w-md">
               {t('footerDesc')}
             </p>
           </div>
-          
+
           <div>
-            <h4 className="font-bold text-xl text-accent-green mb-8 uppercase tracking-widest">{t('quickLinks')}</h4>
+            <h4 className="font-bold text-xl text-accent-green mb-8 uppercase tracking-widest">Quick Links</h4>
             <ul className="space-y-4 text-lg">
-              <li><a href="#" className="text-white/70 hover:text-accent-green transition-all hover:translate-x-1 inline-block">{t('aboutUs')}</a></li>
-              <li><a href="#" className="text-white/70 hover:text-accent-green transition-all hover:translate-x-1 inline-block">{t('howItWorks')}</a></li>
-              <li><a href="#" className="text-white/70 hover:text-accent-green transition-all hover:translate-x-1 inline-block">{t('privacy')}</a></li>
-              <li><a href="#" className="text-white/70 hover:text-accent-green transition-all hover:translate-x-1 inline-block">{t('contact')}</a></li>
+              <li><a href="#" className="text-white/70 hover:text-accent-green transition-all hover:translate-x-1 inline-block">About Us</a></li>
+              <li><a href="#" className="text-white/70 hover:text-accent-green transition-all hover:translate-x-1 inline-block">Privacy Policy</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold text-xl text-accent-green mb-8 uppercase tracking-widest">{t('contact')}</h4>
+            <h4 className="font-bold text-xl text-accent-green mb-8 uppercase tracking-widest">Contact Support</h4>
             <div className="space-y-4 text-lg text-white/70">
               <p className="hover:text-white transition-colors cursor-pointer">Email: support@farmermitra.com</p>
               <p className="hover:text-white transition-colors cursor-pointer">Phone: +91 12345 67890</p>
               <div className="pt-4 flex gap-4">
-                {/* Social Placeholders */}
-                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-accent-green hover:text-deep-green transition-all cursor-pointer">
-                  <span className="font-black text-xs">FB</span>
-                </div>
-                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-accent-green hover:text-deep-green transition-all cursor-pointer">
-                  <span className="font-black text-xs">TW</span>
-                </div>
-                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-accent-green hover:text-deep-green transition-all cursor-pointer">
-                  <span className="font-black text-xs">IG</span>
-                </div>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div className="pt-12 border-t border-white/10 text-center text-sm text-white/40 font-medium tracking-widest uppercase">
-          © {new Date().getFullYear()} FarmerMitra. {t('rights')}
+          © {new Date().getFullYear()} Farmer Mitra. {t('rights')}
         </div>
       </div>
       {/* Decorative Background Elements */}
