@@ -56,7 +56,7 @@ export default function Results({ result, onBack, onScanAgain, onAskAgent }: Res
           }}
         >
           <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: isHealthy ? '#86efac' : '#fca5a5' }} />
-          {isHealthy ? `✅ ${t('healthyPlant')}` : t('diseaseDetected')}
+          {isHealthy ? <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" />{t('healthyPlant')}</span> : t('diseaseDetected')}
         </div>
 
         {/* Title over image */}

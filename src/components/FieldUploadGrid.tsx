@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Upload, X, MapPin, AlertCircle, CheckCircle2, Clock, Loader2 } from 'lucide-react';
+import { Upload, X, MapPin, AlertCircle, CheckCircle2, Clock, Loader2, Lightbulb, AlertTriangle } from 'lucide-react';
 import { FieldPhoto } from '../types';
 import { validateImage } from '../utils/imageValidation';
 
@@ -186,7 +186,7 @@ export default function FieldUploadGrid({
       {/* Tip about GPS */}
       {photos.length === 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex gap-3 items-start">
-          <span className="text-xl flex-shrink-0">💡</span>
+          <Lightbulb className="w-6 h-6 text-blue-500 flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold text-blue-700">Enable GPS on your camera</p>
             <p className="text-xs text-blue-600 mt-0.5 leading-relaxed">
@@ -224,7 +224,7 @@ export default function FieldUploadGrid({
                   exit={{ opacity: 0, y: -8 }}
                   className="flex gap-3 items-start bg-amber-50 border border-amber-300 rounded-2xl p-4"
                 >
-                  <span className="text-xl flex-shrink-0">⚠️</span>
+                  <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0" />
                   <div>
                     {noGpsCount > 0 ? (
                       <>

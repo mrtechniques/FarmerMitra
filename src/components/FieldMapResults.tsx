@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Download, MapPin, AlertTriangle, CheckCircle2, ChevronRight, Shield, Leaf as LeafIcon } from 'lucide-react';
+import { Download, MapPin, AlertTriangle, CheckCircle2, ChevronRight, Shield, Leaf as LeafIcon, Plus, AlertCircle, Map as MapIcon } from 'lucide-react';
 import { FieldBatch, FieldZoneResult } from '../types';
 import FieldSVGMap from './FieldSVGMap';
 import FieldCompareDiff from './FieldCompareDiff';
@@ -14,11 +14,11 @@ interface FieldMapResultsProps {
 }
 
 function severityLabel(z: FieldZoneResult): string {
-  if (z.adjacentRisk && z.isHealthy) return '⚠️ At Risk';
-  if (z.isHealthy) return '✅ Healthy';
-  if (z.severity === 'high') return '🔴 Severe';
-  if (z.severity === 'medium') return '🟠 Moderate';
-  return '🟡 Mild';
+  if (z.adjacentRisk && z.isHealthy) return 'At Risk';
+  if (z.isHealthy) return 'Healthy';
+  if (z.severity === 'high') return 'Severe';
+  if (z.severity === 'medium') return 'Moderate';
+  return 'Mild';
 }
 
 export default function FieldMapResults({
@@ -67,7 +67,7 @@ export default function FieldMapResults({
             <Download className="w-4 h-4" /> Export
           </button>
           <button onClick={onNewBatch} className="flex items-center gap-1.5 px-4 py-2 bg-deep-green text-white rounded-xl text-sm font-bold hover:bg-muted-green transition-all shadow-lg">
-            ➕ New Batch
+            <Plus className="w-4 h-4" /> New Batch
           </button>
         </div>
       </div>
@@ -75,16 +75,18 @@ export default function FieldMapResults({
       {/* Stat row */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { val: stats.healthy, label: 'Healthy', color: 'text-green-600', bg: 'bg-green-50', emoji: '✅' },
-          { val: stats.diseased, label: 'Diseased', color: 'text-red-600', bg: 'bg-red-50', emoji: '🔴' },
-          { val: stats.atRisk, label: 'At Risk', color: 'text-amber-600', bg: 'bg-amber-50', emoji: '⚠️' },
-        ].map(s => (
+          { val: stats.healthy, label: 'Healthy', color: 'text-green-600', bg: 'bg-green-50', Icon: CheckCircle2 },
+          { val: stats.diseased, label: 'Diseased', color: 'text-red-600', bg: 'bg-red-50', Icon: AlertCircle },
+          { val: stats.atRisk, label: 'At Risk', color: 'text-amber-600', bg: 'bg-amber-50', Icon: AlertTriangle },
+        ].map(s => {
+          const Icon = s.Icon;
+          return (
           <div key={s.label} className={`${s.bg} rounded-2xl p-3 text-center border border-white/50`}>
-            <div className="text-2xl">{s.emoji}</div>
+            <div className="flex justify-center mb-1"><Icon className="w-6 h-6 text-text-secondary" /></div>
             <div className={`text-2xl font-black ${s.color}`}>{s.val}</div>
             <div className="text-xs text-text-secondary">{s.label}</div>
           </div>
-        ))}
+        )})}
       </div>
 
       {/* Tab bar */}
@@ -97,7 +99,7 @@ export default function FieldMapResults({
               activeTab === tab ? 'bg-white text-deep-green shadow' : 'text-text-secondary hover:text-text-primary'
             }`}
           >
-            {tab === 'unlocated' ? `No GPS (${batch.unlocatedZones.length})` : tab === 'list' ? 'List' : '🗺 Map'}
+            {tab === 'unlocated' ? `No GPS (${batch.unlocatedZones.length})` : tab === 'list' ? 'List' : <span className="flex items-center justify-center gap-1.5"><MapIcon className="w-4 h-4" /> Map</span>}
           </button>
         ))}
       </div>

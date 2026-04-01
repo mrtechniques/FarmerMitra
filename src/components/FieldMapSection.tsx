@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Tractor, Database, X, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Tractor, Database, X as XIcon, ToggleLeft, ToggleRight, Save, Wheat } from 'lucide-react';
 import { FieldPhoto, FieldZoneResult, FieldBatch, LocationConsent } from '../types';
 import { useBatchHistory } from '../hooks/useBatchHistory';
 import FieldUploadGrid from './FieldUploadGrid';
@@ -18,7 +18,7 @@ function ConsentBanner({ onAllow, onDeny }: { onAllow: () => void; onDeny: () =>
       animate={{ opacity: 1, y: 0 }}
       className="bg-white border border-deep-green/20 rounded-3xl p-5 shadow-soft flex flex-col sm:flex-row gap-4 items-start sm:items-center"
     >
-      <div className="text-3xl flex-shrink-0">💾</div>
+      <Save className="w-8 h-8 text-deep-green flex-shrink-0" />
       <div className="flex-1">
         <p className="font-bold text-text-primary text-sm">Save & link your farm scans across sessions?</p>
         <p className="text-xs text-text-secondary mt-0.5 leading-relaxed">
@@ -248,7 +248,7 @@ export default function FieldMapSection() {
             </div>
             <div className="flex-1">
               <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-3">
-                🌾 Large Farm Feature
+                <Wheat className="w-4 h-4" /> Large Farm Feature
               </div>
               <h3 className="text-2xl font-black mb-2">Survey Multiple Fields at Once</h3>
               <p className="text-white/85 text-sm leading-relaxed max-w-lg">
@@ -283,7 +283,7 @@ export default function FieldMapSection() {
             onClick={() => { setIsOpen(false); setStage('idle'); }}
             className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all"
           >
-            <X className="w-4 h-4 text-white" />
+            <XIcon className="w-4 h-4 text-white" />
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Sparkles, Leaf, X, Sprout, Bug, Droplets, Sun, Copy, Check } from 'lucide-react';
+import { Send, User, Bot, Sparkles, Leaf, X, Sprout, Bug, Droplets, Sun, Copy, Check, Mic, MicOff, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../hooks/useLanguage';
 import { ScanResult } from '../types';
@@ -32,7 +32,7 @@ async function callGemini(
   systemPrompt: string
 ): Promise<string> {
   if (!GEMINI_API_KEY) {
-    return "⚠️ Gemini API key not configured. Please add GEMINI_API_KEY to your .env file to enable AI responses.";
+    return "Gemini API key not configured. Please add GEMINI_API_KEY to your .env file to enable AI responses.";
   }
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
@@ -75,6 +75,30 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function SpeakButton({ text }: { text: string }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const handlePlay = () => {
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => setIsPlaying(false);
+    setIsPlaying(true);
+    window.speechSynthesis.speak(utterance);
+  };
+  return (
+    <button
+      onClick={handlePlay}
+      className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-black/5 ${isPlaying ? 'text-accent-green' : 'text-text-secondary'}`}
+      title={isPlaying ? "Stop Speaking" : "Read Aloud"}
+    >
+      <Volume2 className="w-3.5 h-3.5" />
+    </button>
+  );
+}
+
 export default function Agent({ initialContext, onClearContext }: AgentProps) {
   const { t } = useLanguage();
 
@@ -91,7 +115,7 @@ Start by acknowledging this diagnosis and offering to help with follow-up questi
 Keep responses concise (2-4 sentences), friendly, and practical. Use simple language suitable for farmers.`;
 
   const welcomeText = initialContext
-    ? `I can see your **${initialContext.leafType}** was diagnosed with **${initialContext.disease}** (${initialContext.confidence}% confidence). I'm here to help! What would you like to know about treatment or prevention? 🌿`
+    ? `I can see your **${initialContext.leafType}** was diagnosed with **${initialContext.disease}** (${initialContext.confidence}% confidence). I'm here to help! What would you like to know about treatment or prevention?`
     : t('botWelcome');
 
   const [messages, setMessages] = useState<Message[]>([
@@ -105,15 +129,60 @@ Keep responses concise (2-4 sentences), friendly, and practical. Use simple lang
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showQuickPrompts, setShowQuickPrompts] = useState(true);
+  const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const conversationRef = useRef<{ role: string; parts: { text: string }[] }[]>([]);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(prev => prev ? `${prev} ${transcript}` : transcript);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+
+    return () => {
+      window.speechSynthesis.cancel();
+      if (recognitionRef.current) recognitionRef.current.stop();
+    };
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      if (recognitionRef.current) {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } else {
+        alert("Voice input is not supported in this browser.");
+      }
+    }
+  };
 
   const sendMessage = async (text: string) => {
     const trimmed = text.trim();
@@ -151,7 +220,7 @@ Keep responses concise (2-4 sentences), friendly, and practical. Use simple lang
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : 'Something went wrong.';
       setMessages(prev =>
-        prev.map(m => (m.id === loadingId ? { ...m, text: `⚠️ ${errMsg}`, isLoading: false } : m))
+        prev.map(m => (m.id === loadingId ? { ...m, text: `Error: ${errMsg}`, isLoading: false } : m))
       );
     } finally {
       setIsLoading(false);
@@ -283,7 +352,8 @@ Keep responses concise (2-4 sentences), friendly, and practical. Use simple lang
                       <>
                         <p className="whitespace-pre-wrap">{msg.text}</p>
                         {msg.sender === 'bot' && (
-                          <div className="absolute top-2 right-2">
+                          <div className="absolute top-2 right-2 flex items-center bg-white/80 rounded-lg shadow-sm border border-divider/50">
+                            <SpeakButton text={msg.text} />
                             <CopyButton text={msg.text} />
                           </div>
                         )}
@@ -333,6 +403,17 @@ Keep responses concise (2-4 sentences), friendly, and practical. Use simple lang
                   {500 - input.length}
                 </span>
               )}
+              <motion.button
+                type="button"
+                onClick={toggleListening}
+                whileTap={{ scale: 0.9 }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md transition-colors ${
+                  isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white border border-divider text-text-secondary hover:bg-gray-50'
+                }`}
+                title={isListening ? "Stop Listening" : "Start Voice Input"}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </motion.button>
               <motion.button
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}

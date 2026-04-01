@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { FieldZoneResult } from '../types';
+import { Map } from 'lucide-react';
 
 interface Node {
   zone: FieldZoneResult;
@@ -111,7 +112,7 @@ export default function FieldSVGMap({
   if (locatedZones.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-text-secondary gap-3">
-        <span className="text-5xl">🗺️</span>
+        <Map className="w-12 h-12" />
         <p className="font-semibold">No GPS data found in these photos</p>
         <p className="text-sm">Check the "Unlocated" tab for results</p>
       </div>
@@ -193,7 +194,7 @@ export default function FieldSVGMap({
               />
               {/* Emoji in node */}
               <text x={n.x} y={n.y + 5} textAnchor="middle" fontSize={12} style={{ userSelect: 'none' }}>
-                {n.zone.isHealthy ? (n.zone.adjacentRisk ? '⚠' : '✓') : '✕'}
+                {n.zone.isHealthy ? (n.zone.adjacentRisk ? '!' : '✓') : '✕'}
               </text>
 
               {/* Label */}

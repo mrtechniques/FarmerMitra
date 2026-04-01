@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { FieldZoneResult, FieldBatch } from '../types';
+import { AlertCircle, CheckCircle2, RefreshCw, AlertTriangle, PlusCircle } from 'lucide-react';
 
 interface FieldCompareDiffProps {
   currentBatch: FieldBatch;
@@ -54,12 +55,12 @@ function computeDiff(current: FieldZoneResult[], previous: FieldZoneResult[]): Z
   });
 }
 
-const CHANGE_META: Record<ChangeType, { label: string; emoji: string; color: string; bg: string }> = {
-  'new-infection': { label: 'New infection', emoji: '🆕', color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
-  'recovered':     { label: 'Recovered', emoji: '✅', color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
-  'unchanged-healthy': { label: 'Stable healthy', emoji: '🔄', color: 'text-green-600', bg: 'bg-green-50/50 border-green-100' },
-  'unchanged-diseased': { label: 'Still diseased', emoji: '⚠️', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
-  'new-location': { label: 'New location', emoji: '➕', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+const CHANGE_META: Record<ChangeType, { label: string; Icon: any; color: string; bg: string }> = {
+  'new-infection': { label: 'New infection', Icon: AlertCircle, color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
+  'recovered':     { label: 'Recovered', Icon: CheckCircle2, color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
+  'unchanged-healthy': { label: 'Stable healthy', Icon: RefreshCw, color: 'text-green-600', bg: 'bg-green-50/50 border-green-100' },
+  'unchanged-diseased': { label: 'Still diseased', Icon: AlertTriangle, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+  'new-location': { label: 'New location', Icon: PlusCircle, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
 };
 
 export default function FieldCompareDiff({ currentBatch, previousBatch, onBack }: FieldCompareDiffProps) {
@@ -89,17 +90,19 @@ export default function FieldCompareDiff({ currentBatch, previousBatch, onBack }
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'New infections', val: summary.newInfections, emoji: '🆕', color: 'text-red-600' },
-          { label: 'Recovered', val: summary.recovered, emoji: '✅', color: 'text-green-600' },
-          { label: 'Still diseased', val: summary.stillDiseased, emoji: '⚠️', color: 'text-amber-600' },
-          { label: 'New spots', val: summary.newLocations, emoji: '➕', color: 'text-blue-600' },
-        ].map(s => (
+          { label: 'New infections', val: summary.newInfections, Icon: AlertCircle, color: 'text-red-600' },
+          { label: 'Recovered', val: summary.recovered, Icon: CheckCircle2, color: 'text-green-600' },
+          { label: 'Still diseased', val: summary.stillDiseased, Icon: AlertTriangle, color: 'text-amber-600' },
+          { label: 'New spots', val: summary.newLocations, Icon: PlusCircle, color: 'text-blue-600' },
+        ].map(s => {
+          const Icon = s.Icon;
+          return (
           <div key={s.label} className="bg-surface rounded-2xl p-4 text-center border border-divider shadow-soft">
-            <div className="text-3xl mb-1">{s.emoji}</div>
+            <div className="flex justify-center mb-1"><Icon className="w-8 h-8 text-text-secondary" /></div>
             <div className={`text-2xl font-black ${s.color}`}>{s.val}</div>
             <div className="text-xs text-text-secondary mt-0.5">{s.label}</div>
           </div>
-        ))}
+        )})}
       </div>
 
       {/* Zone-by-zone diff */}
@@ -115,7 +118,7 @@ export default function FieldCompareDiff({ currentBatch, previousBatch, onBack }
               transition={{ delay: i * 0.04 }}
               className={`flex items-start gap-3 p-4 rounded-2xl border ${meta.bg}`}
             >
-              <span className="text-2xl flex-shrink-0">{meta.emoji}</span>
+              <meta.Icon className="w-6 h-6 flex-shrink-0 text-text-secondary" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-bold text-sm text-text-primary truncate">{d.zone.label}</p>

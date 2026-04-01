@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X } from 'lucide-react';
+import { X, MapPin, Plus, ArrowLeftRight, Trash2, Check } from 'lucide-react';
 import { FieldBatch } from '../types';
 
 interface BatchDialogProps {
@@ -50,8 +50,8 @@ export default function BatchDialog({
           </button>
 
           {/* Icon */}
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-200 flex items-center justify-center mx-auto mb-5 text-3xl">
-            {hasConsent && previousBatch ? '📍' : '➕'}
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-200 flex items-center justify-center mx-auto mb-5 text-green-700">
+            {hasConsent && previousBatch ? <MapPin className="w-8 h-8" /> : <Plus className="w-8 h-8" />}
           </div>
 
           {/* Title & subtitle */}
@@ -73,19 +73,19 @@ export default function BatchDialog({
                   onClick={onAddToMap}
                   className="w-full bg-deep-green text-white py-3.5 rounded-2xl font-bold text-sm hover:bg-muted-green transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95"
                 >
-                  ➕ Add to existing map
+                  <span className="flex items-center gap-2"><Plus className="w-4 h-4" /> Add to existing map</span>
                 </button>
                 <button
                   onClick={onCompare}
                   className="w-full bg-surface-alt border-2 border-deep-green text-deep-green py-3.5 rounded-2xl font-bold text-sm hover:bg-accent-green/10 transition-all flex items-center justify-center gap-2 active:scale-95"
                 >
-                  ↔ Compare scans
+                  <span className="flex items-center gap-2"><ArrowLeftRight className="w-4 h-4" /> Compare scans</span>
                 </button>
                 <button
                   onClick={onStartFresh}
                   className="w-full text-text-secondary py-2.5 rounded-2xl font-medium text-sm hover:bg-gray-100 transition-all active:scale-95"
                 >
-                  🗑 Start fresh (discard old)
+                  <span className="flex items-center gap-2 justify-center"><Trash2 className="w-4 h-4" /> Start fresh (discard old)</span>
                 </button>
               </div>
             </>
@@ -110,7 +110,7 @@ export default function BatchDialog({
                   onClick={onEnableAndLink}
                   className="w-full bg-deep-green text-white py-3.5 rounded-2xl font-bold text-sm hover:bg-muted-green transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95"
                 >
-                  ✅ Enable & Link
+                  <span className="flex items-center gap-2"><Check className="w-4 h-4" /> Enable & Link</span>
                 </button>
                 <button
                   onClick={onStartFresh}
