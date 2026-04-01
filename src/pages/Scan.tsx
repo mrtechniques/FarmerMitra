@@ -23,9 +23,9 @@ function getSharpnessScore(dataUrl: string): Promise<number> {
       for (let y = 1; y < height - 1; y++) {
         for (let x = 1; x < width - 1; x++) {
           const i = (y * width + x) * 4;
-          const g   = (px: number) => data[px] * 0.299 + data[px + 1] * 0.587 + data[px + 2] * 0.114;
-          const lap = 4 * g(i) - g(((y-1)*width+x)*4) - g(((y+1)*width+x)*4)
-                                - g((y*width+x-1)*4)   - g((y*width+x+1)*4);
+          const g = (px: number) => data[px] * 0.299 + data[px + 1] * 0.587 + data[px + 2] * 0.114;
+          const lap = 4 * g(i) - g(((y - 1) * width + x) * 4) - g(((y + 1) * width + x) * 4)
+            - g((y * width + x - 1) * 4) - g((y * width + x + 1) * 4);
           sum += lap; sumSq += lap * lap; n++;
         }
       }
@@ -48,7 +48,7 @@ async function checkIsLeaf(dataUrl: string): Promise<boolean> {
   if (apiKey) {
     try {
       const base64 = dataUrl.split(',')[1];
-      const mime   = dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
+      const mime = dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
@@ -84,13 +84,13 @@ async function checkIsLeaf(dataUrl: string): Promise<boolean> {
       const { data } = ctx.getImageData(0, 0, 128, 128);
       let greenish = 0, total = 0;
       for (let i = 0; i < data.length; i += 4) {
-        const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+        const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
         if (a < 50) continue;
         total++;
         // plant-like: green dominant, OR yellow/brown (diseased)
-        const isGreen  = g > r * 1.15 && g > b * 1.1 && g > 40;
+        const isGreen = g > r * 1.15 && g > b * 1.1 && g > 40;
         const isYellow = r > 120 && g > 100 && b < 80 && r > b * 1.5;
-        const isBrown  = r > 80 && g > 50 && b < 60 && r > g * 1.1;
+        const isBrown = r > 80 && g > 50 && b < 60 && r > g * 1.1;
         if (isGreen || isYellow || isBrown) greenish++;
       }
       resolve(total > 0 && greenish / total >= 0.18);
@@ -130,12 +130,11 @@ function ValidationModal({
         className="bg-white rounded-[2.5rem] shadow-2xl p-10 max-w-md w-full text-center"
       >
         {/* Icon */}
-        <div className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 shadow-inner ${
-          type === 'not-leaf' ? 'bg-amber-50' : 'bg-blue-50'
-        }`}>
+        <div className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 shadow-inner ${type === 'not-leaf' ? 'bg-amber-50' : 'bg-blue-50'
+          }`}>
           {type === 'not-leaf'
             ? <Leaf className="w-10 h-10 text-amber-500" />
-            : <Eye  className="w-10 h-10 text-blue-500" />
+            : <Eye className="w-10 h-10 text-blue-500" />
           }
         </div>
 
@@ -195,17 +194,17 @@ interface ScanProps {
 export default function Scan({ onAnalyze, analyzeError }: ScanProps) {
   const { t } = useLanguage();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing]     = useState(false);
-  const [isCameraOpen, setIsCameraOpen]   = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
-  const [isValidating, setIsValidating]   = useState(false);
-  const [modal, setModal]                 = useState<{ type: ModalType; score?: number } | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const [modal, setModal] = useState<{ type: ModalType; score?: number } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoRef     = useRef<HTMLVideoElement>(null);
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const streamRef    = useRef<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   // ── VALIDATION PIPELINE ──────────────────────────────────
   const validateAndSetImage = async (dataUrl: string) => {
@@ -315,28 +314,7 @@ export default function Scan({ onAnalyze, analyzeError }: ScanProps) {
         )}
       </AnimatePresence>
 
-      {/* Backend Status Pill */}
-      <div className="flex justify-center mb-6">
-        <AnimatePresence mode="wait">
-          {backendStatus === 'checking' ? (
-            <motion.div key="checking" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="flex items-center gap-2 px-4 py-2 bg-surface border border-divider rounded-full text-sm text-text-secondary shadow-soft">
-              <Loader2 className="w-4 h-4 animate-spin" /><span>Connecting to AI engine...</span>
-            </motion.div>
-          ) : backendStatus === 'online' ? (
-            <motion.div key="online" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-2 px-4 py-2 bg-accent-green/10 border border-accent-green/30 rounded-full text-sm font-bold text-deep-green shadow-soft">
-              <Wifi className="w-4 h-4" /><span>AI Model Ready</span>
-              <div className="w-2 h-2 bg-accent-green rounded-full animate-pulse" />
-            </motion.div>
-          ) : (
-            <motion.div key="offline" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-full text-sm font-bold text-red-600 shadow-soft">
-              <WifiOff className="w-4 h-4" /><span>Backend Offline — run: python backend/app.py</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+
 
       <div className="text-center mb-12">
         <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
@@ -350,9 +328,8 @@ export default function Scan({ onAnalyze, analyzeError }: ScanProps) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
-          className={`relative flex-1 border-2 border-dashed rounded-[3rem] transition-all duration-500 flex flex-col items-center justify-center p-10 shadow-soft overflow-hidden ${
-            selectedImage || isCameraOpen ? 'border-deep-green bg-surface' : 'border-divider bg-surface-alt hover:border-muted-green hover:bg-surface'
-          }`}
+          className={`relative flex-1 border-2 border-dashed rounded-[3rem] transition-all duration-500 flex flex-col items-center justify-center p-10 shadow-soft overflow-hidden ${selectedImage || isCameraOpen ? 'border-deep-green bg-surface' : 'border-divider bg-surface-alt hover:border-muted-green hover:bg-surface'
+            }`}
         >
           <AnimatePresence mode="wait">
 
