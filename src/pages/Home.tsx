@@ -124,12 +124,12 @@ export default function Home({ onStartScan, onChatAgent }: HomeProps) {
               {t('adviceSub')}
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center">
-              <button onClick={onChatAgent} className="bg-white text-deep-green px-10 py-5 rounded-full font-bold text-lg hover:bg-surface-alt transition-all shadow-xl flex items-center gap-3">
+              <button 
+                onClick={onChatAgent} 
+                className="bg-white text-deep-green px-10 py-5 rounded-full font-bold text-lg hover:bg-surface-alt transition-all shadow-xl flex items-center gap-3 active:scale-95"
+              >
                 <MessageSquare className="w-6 h-6" />
                 {t('chatAgent')}
-              </button>
-              <button className="glass text-white px-10 py-5 rounded-full font-bold text-lg hover:bg-white/20 transition-all flex items-center gap-3">
-                {t('aboutUs')}
               </button>
             </div>
           </div>
