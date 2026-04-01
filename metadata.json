@@ -1,0 +1,5 @@
+{
+  "name": "FarmerMitra",
+  "description": "Smart Crop Health Detection for farmers. Upload leaf photos to identify diseases and get recovery insights.",
+  "requestFramePermissions": ["camera", "geolocation"]
+}

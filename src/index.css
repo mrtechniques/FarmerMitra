@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Poppins", ui-sans-serif, system-ui, sans-serif;
+  
+  /* Primary Palette */
+  --color-deep-green: #3F5D1F;
+  --color-muted-green: #6E8B3D;
+  --color-accent-green: #A3C76D;
+  
+  /* Neutrals */
+  --color-bg-nature: #F4F6F1;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F8FAF5;
+  --color-text-primary: #1E1E1E;
+  --color-text-secondary: #6B7280;
+  --color-divider: #E5E7EB;
+
+  /* Custom Shadows */
+  --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.08);
+  --shadow-neumorphic: 6px 6px 12px rgba(0, 0, 0, 0.05), -6px -6px 12px rgba(255, 255, 255, 0.8);
+  
+  /* Radius */
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+}
+
+@layer base {
+  body {
+    @apply bg-bg-nature text-text-primary font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-md bg-white/70 border border-white/20;
+  }
+  
+  .hero-gradient {
+    background: linear-gradient(180deg, #6E8B3D 0%, #3F5D1F 100%);
+  }
+  
+  .soft-card {
+    @apply bg-surface rounded-2xl shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
+  }
+  
+  .neumorphic-btn {
+    @apply bg-surface-alt shadow-neumorphic rounded-full px-6 py-3 transition-all active:scale-95;
+  }
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap');
+
