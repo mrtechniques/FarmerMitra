@@ -17,9 +17,6 @@ interface AgentProps {
   onClearContext?: () => void;
 }
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
-const GEMINI_MODEL = (import.meta.env.VITE_GEMINI_MODEL as string) || 'gemini-2.0-flash';
-
 const QUICK_PROMPTS = [
   { icon: Bug, label: 'diagPlant', text: 'diagPlantQuery' },
   { icon: Droplets, label: 'waterTips', text: 'waterTipsQuery' },
@@ -27,33 +24,53 @@ const QUICK_PROMPTS = [
   { icon: Sun, label: 'bestPractices', text: 'bestPracticesQuery' },
 ];
 
+function getChatApiCandidates() {
+  const configuredBase = import.meta.env.VITE_API_BASE_URL as string | undefined;
+  const candidates = ['/api/chat'];
+
+  if (configuredBase) {
+    candidates.unshift(`${configuredBase.replace(/\/$/, '')}/api/chat`);
+  }
+
+  if (typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+    candidates.push('http://localhost:5050/api/chat');
+  }
+
+  return [...new Set(candidates)];
+}
+
 async function callGemini(
   messages: { role: string; parts: { text: string }[] }[],
   systemPrompt: string
 ): Promise<string> {
-  if (!GEMINI_API_KEY) {
-    return "Gemini API key not configured. Please add GEMINI_API_KEY to your .env file to enable AI responses.";
+  let lastError = 'Chat service unavailable.';
+
+  for (const url of getChatApiCandidates()) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemPrompt,
+          messages,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        lastError = err?.error || `Chat API error ${response.status}`;
+        if (response.status === 404) continue;
+        throw new Error(lastError);
+      }
+
+      const data = await response.json();
+      return data?.text ?? 'Sorry, I could not get a response.';
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : 'Chat service unavailable.';
+    }
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: systemPrompt }] },
-      contents: messages,
-      generationConfig: { temperature: 0.7, maxOutputTokens: 512 },
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `Gemini API error ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Sorry, I could not get a response.';
+  throw new Error(lastError);
 }
 
 function CopyButton({ text }: { text: string }) {

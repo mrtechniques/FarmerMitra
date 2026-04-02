@@ -10,6 +10,27 @@ import BatchDialog from './BatchDialog';
 
 type Stage = 'idle' | 'upload' | 'analyzing' | 'results';
 
+function normalizeZoneHealth(result: any): Pick<FieldZoneResult, 'disease' | 'isHealthy' | 'severity' | 'adjacentRisk'> {
+  const disease = String(result?.disease ?? 'Unknown');
+  const rawClass = String(result?.rawClass ?? '');
+  const rawSeverity = String(result?.severity ?? 'none');
+  const severity: FieldZoneResult['severity'] =
+    rawSeverity === 'low' || rawSeverity === 'medium' || rawSeverity === 'high' ? rawSeverity : 'none';
+  const healthyLabel =
+    disease.toLowerCase().includes('healthy') ||
+    rawClass.toLowerCase().includes('healthy') ||
+    severity === 'none';
+
+  const isHealthy = Boolean(result?.isHealthy) || healthyLabel;
+
+  return {
+    disease: isHealthy ? 'Healthy' : disease,
+    isHealthy,
+    severity: isHealthy ? 'none' : severity,
+    adjacentRisk: isHealthy ? Boolean(result?.adjacentRisk) : false,
+  };
+}
+
 // ─── Consent Banner ───────────────────────────────────────────────────────────
 function ConsentBanner({ onAllow, onDeny }: { onAllow: () => void; onDeny: () => void }) {
   return (
@@ -70,60 +91,71 @@ export default function FieldMapSection() {
 
     const resultsMap: Record<string, FieldZoneResult | 'error'> = {};
 
-    // Process photos concurrently in groups of 3 to avoid overwhelming the backend
-    const CONCURRENCY = 3;
-    for (let i = 0; i < readyPhotos.length; i += CONCURRENCY) {
-      const chunk = readyPhotos.slice(i, i + CONCURRENCY);
-      await Promise.allSettled(
-        chunk.map(async (photo) => {
-          try {
-            const res = await fetch('/api/predict', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ image: photo.dataUrl }),
-            });
-            if (!res.ok) throw new Error(`Server error ${res.status}`);
-            const data = await res.json();
+    try {
+      const payload = {
+        photos: readyPhotos.map(p => ({
+          id: p.id,
+          label: p.label,
+          image: p.dataUrl,
+          lat: p.lat,
+          lng: p.lng
+        }))
+      };
 
-            const isHealthy = data.rawClass?.includes('healthy') ?? false;
-            const severity = isHealthy ? 'none' :
-              (data.confidence ?? 0) > 80 ? 'high' :
-              (data.confidence ?? 0) > 60 ? 'medium' : 'low';
+      const res = await fetch('/api/batch-predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-            const zone: FieldZoneResult = {
-              id: photo.id,
-              label: photo.label,
-              lat: photo.lat,
-              lng: photo.lng,
-              disease: data.disease ?? 'Unknown',
-              leafType: data.leafType ?? 'Unknown',
-              confidence: data.confidence ?? 0,
-              isHealthy,
-              severity,
-              remedies: data.remedies ?? [],
-              recoveryTime: data.recoveryTime ?? 'Varies',
-              details: data.details ?? '',
-              adjacentRisk: false, // computed after all results
-              protectiveActions: [],
-              image: photo.dataUrl,
-              rawClass: data.rawClass ?? '',
-              batchId,
-              batchDate,
-            };
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
 
-            resultsMap[photo.id] = zone;
-            setAnalysisResults(prev => ({ ...prev, [photo.id]: zone }));
-          } catch (e: any) {
-            const errorMsg = e.message?.includes('Image rejected') ? 'Not a Leaf' : 'Error';
-            resultsMap[photo.id] = 'error';
-            setAnalysisResults(prev => ({ ...prev, [photo.id]: errorMsg as any }));
-          }
-        })
-      );
+      data.results.forEach((r: any, idx: number) => {
+        const photo = readyPhotos[idx];
+        if (r.error) {
+           const errorMsg = r.error.includes('No plant') ? 'Not a Leaf' : 'Error';
+           resultsMap[photo.id] = 'error';
+           setAnalysisResults(prev => ({ ...prev, [photo.id]: errorMsg as any }));
+           return;
+        }
+
+        const normalized = normalizeZoneHealth(r);
+
+        const zone: FieldZoneResult = {
+          id: photo.id,
+          label: photo.label,
+          lat: photo.lat,
+          lng: photo.lng,
+          disease: normalized.disease,
+          leafType: r.leafType ?? 'Unknown',
+          confidence: r.confidence ?? 0,
+          isHealthy: normalized.isHealthy,
+          severity: normalized.severity,
+          remedies: r.remedies ?? [],
+          recoveryTime: r.recoveryTime ?? 'Varies',
+          details: r.details ?? '',
+          adjacentRisk: normalized.adjacentRisk,
+          protectiveActions: r.protectiveActions ?? [],
+          image: photo.dataUrl,
+          rawClass: r.rawClass ?? '',
+          batchId,
+          batchDate,
+        };
+        
+        resultsMap[photo.id] = zone;
+        setAnalysisResults(prev => ({ ...prev, [photo.id]: zone }));
+      });
+
+    } catch (e: any) {
+      console.error('Batch predict error:', e);
+      readyPhotos.forEach(p => {
+        resultsMap[p.id] = 'error';
+        setAnalysisResults(prev => ({ ...prev, [p.id]: 'error' as any }));
+      });
     }
 
-    // ── Post-processing: compute adjacent risk ────────────────────────────
-    const RISK_RADIUS_M = 100; // 100 metres
+    const allZones = Object.values(resultsMap).filter(r => r !== 'error') as FieldZoneResult[];
 
     function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
       const R = 6371000;
@@ -133,27 +165,6 @@ export default function FieldMapSection() {
         Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
-
-    const allZones = Object.values(resultsMap).filter(r => r !== 'error') as FieldZoneResult[];
-    const diseased = allZones.filter(z => !z.isHealthy && z.lat !== null);
-    const healthy = allZones.filter(z => z.isHealthy && z.lat !== null);
-
-    healthy.forEach(hz => {
-      const atRisk = diseased.some(dz =>
-        haversine(hz.lat!, hz.lng!, dz.lat!, dz.lng!) <= RISK_RADIUS_M
-      );
-      if (atRisk) {
-        hz.adjacentRisk = true;
-        hz.protectiveActions = [
-          'Apply preventive fungicide spray immediately.',
-          'Install physical barriers (nets/mulch) between fields.',
-          'Remove infected plant debris from nearby areas.',
-          'Monitor daily for early disease symptoms.',
-          'Avoid sharing tools between healthy and diseased sections.',
-        ];
-        resultsMap[hz.id] = hz;
-      }
-    });
 
     // ── Build batch object ────────────────────────────────────────────────
     const locatedZones = allZones.filter(z => z.lat !== null && z.lng !== null);

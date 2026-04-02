@@ -88,7 +88,7 @@ export async function validateImage(dataUrl: string): Promise<ValidationResult> 
   if (!isLeaf) return { pass: false, reason: 'not-leaf' };
 
   const score = await getSharpnessScore(dataUrl);
-  if (score < 60) return { pass: false, reason: 'blurry', sharpnessScore: score };
+  if (score < 30) return { pass: false, reason: 'blurry', sharpnessScore: score };
 
   return { pass: true, sharpnessScore: score };
 }

@@ -58,17 +58,17 @@ function ValidationModal({
           <div className="my-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">{t('sharpnessScore')}</span>
-              <span className={`text-lg font-black ${score >= 60 ? 'text-deep-green' : 'text-red-500'}`}>{score}/100</span>
+              <span className={`text-lg font-black ${score >= 30 ? 'text-deep-green' : 'text-red-500'}`}>{score}/100</span>
             </div>
             <div className="w-full bg-bg-nature h-3 rounded-full overflow-hidden shadow-inner">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${score}%` }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
-                className={`h-full rounded-full ${score >= 60 ? 'bg-accent-green' : 'bg-red-400'}`}
+                className={`h-full rounded-full ${score >= 30 ? 'bg-accent-green' : 'bg-red-400'}`}
               />
             </div>
-            <p className="text-xs text-text-secondary mt-2">{t('minRequired')}: <strong>60/100</strong></p>
+            <p className="text-xs text-text-secondary mt-2">{t('minRequired')}: <strong>30/100</strong></p>
           </div>
         )}
 
@@ -129,9 +129,9 @@ export default function Scan({ onAnalyze, analyzeError }: ScanProps) {
       return;
     }
 
-    // Step 2: Sharpness score ≥ 60?
+    // Step 2: Sharpness score >= 30?
     const score = await getSharpnessScore(dataUrl);
-    if (score < 60) {
+    if (score < 30) {
       setIsValidating(false);
       setModal({ type: 'blurry', score });
       return;

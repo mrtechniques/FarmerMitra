@@ -21,6 +21,12 @@ function severityLabel(z: FieldZoneResult): string {
   return 'Mild';
 }
 
+function zoneBucket(z: FieldZoneResult): 'healthy' | 'diseased' | 'atRisk' {
+  if (z.isHealthy && z.adjacentRisk) return 'atRisk';
+  if (z.isHealthy) return 'healthy';
+  return 'diseased';
+}
+
 export default function FieldMapResults({
   batch,
   previousBatch,
@@ -30,12 +36,13 @@ export default function FieldMapResults({
 }: FieldMapResultsProps) {
   const [activeTab, setActiveTab] = useState<'map' | 'list' | 'unlocated'>('map');
   const [selectedZone, setSelectedZone] = useState<FieldZoneResult | null>(null);
+  const allZones = [...batch.zones, ...batch.unlocatedZones];
 
   const stats = {
-    total: batch.zones.length + batch.unlocatedZones.length,
-    healthy: [...batch.zones, ...batch.unlocatedZones].filter(z => z.isHealthy && !z.adjacentRisk).length,
-    diseased: [...batch.zones, ...batch.unlocatedZones].filter(z => !z.isHealthy).length,
-    atRisk: [...batch.zones, ...batch.unlocatedZones].filter(z => z.adjacentRisk).length,
+    total: allZones.length,
+    healthy: allZones.filter(z => zoneBucket(z) === 'healthy').length,
+    diseased: allZones.filter(z => zoneBucket(z) === 'diseased').length,
+    atRisk: allZones.filter(z => zoneBucket(z) === 'atRisk').length,
   };
 
   const exportReport = () => {

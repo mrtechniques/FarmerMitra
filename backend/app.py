@@ -34,6 +34,50 @@ log = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+
+@app.route("/api/chat", methods=["POST"])
+def chat_with_agent():
+    try:
+        payload = request.get_json(silent=True) or {}
+        messages = payload.get("messages") or []
+        system_prompt = payload.get("systemPrompt") or ""
+
+        if not isinstance(messages, list) or not all(isinstance(m, dict) for m in messages):
+            return jsonify({"error": "Invalid messages payload."}), 400
+
+        api_key = os.getenv("GEMINI_API_KEY", "")
+        model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+
+        if not api_key:
+            return jsonify({
+                "error": "AI chat is not configured on the server. Add GEMINI_API_KEY to the backend .env file."
+            }), 503
+
+        body = {
+            "contents": messages,
+            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 512},
+        }
+        if system_prompt:
+            body["system_instruction"] = {"parts": [{"text": system_prompt}]}
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        response = requests.post(url, json=body, timeout=20)
+
+        if not response.ok:
+            err = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+            return jsonify({"error": err.get("error", {}).get("message", f"Gemini API error {response.status_code}")}), response.status_code
+
+        data = response.json()
+        text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+        if not text:
+            text = "Sorry, I could not get a response."
+
+        return jsonify({"text": text})
+
+    except Exception as e:
+        log.error(f"Chat generation failed: {e}", exc_info=True)
+        return jsonify({"error": "Chat generation failed."}), 500
+
 # ─── Model Configuration ─────────────────────────────────────────────────────
 MODEL_PATH = Path(__file__).parent / "models" / "farmer-mitra_weights.pth"
 
@@ -701,59 +745,58 @@ def build_convnext_tiny_custom(num_classes: int):
     import torch
     import torch.nn as nn
 
+    class Permute(nn.Module):
+        def __init__(self, *dims):
+            super().__init__()
+            self.dims = dims
+        def forward(self, x):
+            return x.permute(*self.dims)
+
     # ── ConvNeXt Block ────────────────────────────────────────────────────
     class ConvNeXtBlock(nn.Module):
         """
         ConvNeXt block:
-          DW-7x7 -> LN -> 1x1 (expand 4x) -> GELU -> 1x1 (project) -> layer_scale
+          DW-7x7 -> Permute -> LN -> 1x1 (expand) -> GELU -> 1x1 (project) -> Permute
+        Indices match provided 108MB checkpoint (188 keys).
         """
         def __init__(self, dim: int, expand: int = 4):
             super().__init__()
             self.layer_scale = nn.Parameter(torch.ones(dim, 1, 1) * 1e-6)
             self.block = nn.Sequential(
                 nn.Conv2d(dim, dim, kernel_size=7, padding=3, groups=dim, bias=True),  # block.0
-                nn.LayerNorm([dim], elementwise_affine=True),                          # block.1 (spatial)
+                Permute(0, 2, 3, 1),                                                   # block.1
+                nn.LayerNorm([dim], eps=1e-6, elementwise_affine=True),                # block.2
                 nn.Linear(dim, dim * expand, bias=True),                               # block.3
                 nn.GELU(),                                                             # block.4
                 nn.Linear(dim * expand, dim, bias=True),                               # block.5
+                Permute(0, 3, 1, 2)                                                    # block.6
             )
 
-        def _apply_block(self, x):
-            # x: [B, C, H, W]
-            b, c, h, w = x.shape
-            # DW conv
-            out = self.block[0](x)                          # [B, C, H, W]
-            # Reshape for LayerNorm (apply over C dim)
-            out = out.permute(0, 2, 3, 1)                   # [B, H, W, C]
-            out = self.block[1](out)                        # LN
-            out = self.block[2](out)                        # Linear expand
-            out = self.block[3](out)                        # GELU
-            out = self.block[4](out)                        # Linear project
-            out = out.permute(0, 3, 1, 2)                   # [B, C, H, W]
-            return out
+        def _forward_block(self, x):
+            return self.block(x)
 
         def forward(self, x):
-            return x + self.layer_scale * self._apply_block(x)
+            return x + self.layer_scale * self._forward_block(x)
 
     # ── ConvNeXt Stage ────────────────────────────────────────────────────
     def make_stage(dim: int, depth: int) -> nn.Module:
         return nn.Sequential(*[ConvNeXtBlock(dim) for _ in range(depth)])
 
     # ── Downsample ────────────────────────────────────────────────────────
-    class Downsample(nn.Module):
-        """LN -> strided 2x2 conv"""
+    class Downsample(nn.Sequential):
+        """LN -> strided 2x2 conv. Uses Sequential to match checkpoint indices (0, 1)."""
         def __init__(self, in_ch: int, out_ch: int):
-            super().__init__()
-            # LN applied channel-last
-            self.norm = nn.LayerNorm([in_ch], elementwise_affine=True)
-            self.conv = nn.Conv2d(in_ch, out_ch, kernel_size=2, stride=2, bias=True)
+            super().__init__(
+                nn.LayerNorm([in_ch], eps=1e-6, elementwise_affine=True), # 0
+                nn.Conv2d(in_ch, out_ch, kernel_size=2, stride=2, bias=True) # 1
+            )
 
         def forward(self, x):
             # x: [B, C, H, W]
             x = x.permute(0, 2, 3, 1)   # [B, H, W, C]
-            x = self.norm(x)
+            x = self[0](x)              # LayerNorm
             x = x.permute(0, 3, 1, 2)   # [B, C, H, W]
-            x = self.conv(x)
+            x = self[1](x)              # Conv2d
             return x
 
     # ── Spatial Attention ────────────────────────────────────────────────
@@ -902,51 +945,8 @@ def load_model():
         log.info(f"Checkpoint loaded: {len(state_dict)} keys")
 
         # ── Build the model skeleton ─────────────────────────────────────
-        # ConvNeXt-Tiny features (standard torchvision)
-        base = tv_models.convnext_tiny(weights=None)
-
-        class SpatialAttention(nn.Module):
-            def __init__(self, channels: int):
-                super().__init__()
-                mid = channels // 16  # 768 // 16 = 48
-                self.fc = nn.Sequential(
-                    nn.Linear(channels, mid, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Linear(mid, channels, bias=True),
-                    nn.Sigmoid(),
-                )
-                self.conv_after_concat = nn.Conv2d(2, 1, kernel_size=7, padding=3, bias=True)
-
-            def forward(self, x):
-                b, c, h, w = x.shape
-                avg_c = x.mean(dim=[2, 3])
-                ch_attn = self.fc(avg_c).view(b, c, 1, 1)
-                x_ch = x * ch_attn
-                avg_s = x_ch.mean(dim=1, keepdim=True)
-                max_s, _ = x_ch.max(dim=1, keepdim=True)
-                sp_attn = torch.sigmoid(self.conv_after_concat(torch.cat([avg_s, max_s], dim=1)))
-                return x_ch * sp_attn
-
-        class FarmerMitraNet(nn.Module):
-            def __init__(self, features, num_classes):
-                super().__init__()
-                self.features = features
-                self.attention = SpatialAttention(768)
-                self.classifier = nn.Sequential(
-                    nn.Linear(768, 512, bias=True),
-                    nn.GELU(),
-                    nn.Dropout(p=0.3),
-                    nn.Linear(512, num_classes, bias=True),
-                )
-
-            def forward(self, x):
-                x = self.features(x)        # ConvNeXt features: [B, 768, H', W']
-                x = self.attention(x)       # Spatial attention: [B, 768, H', W']
-                x = x.mean(dim=[2, 3])      # Global avg pool: [B, 768]
-                x = self.classifier(x)      # [B, num_classes]
-                return x
-
-        net = FarmerMitraNet(base.features, NUM_CLASSES)
+        # Use the custom architecture that matches the provided weights exactly (188 keys)
+        net = build_convnext_tiny_custom(NUM_CLASSES)
 
         # ── Load the entire checkpoint at once  ──────────────────────────
         # The checkpoint has keys like:
@@ -1439,7 +1439,8 @@ def batch_predict():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    # Use port 5050 to avoid macOS AirPlay conflict on 5000
+    port = int(os.environ.get("PORT", 5050))
     log.info("=" * 60)
     log.info("  FarmerMitra Disease Detection Backend")
     log.info("=" * 60)
