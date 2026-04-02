@@ -1,7 +1,8 @@
 import React from 'react';
 import {
   ShieldCheck, Clock, AlertCircle, CheckCircle2,
-  ArrowLeft, Leaf, MessageSquare, Camera
+  ArrowLeft, Leaf, MessageSquare, Camera,
+  TrendingUp, Target, Activity, BarChart3
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ScanResult } from '../types';
@@ -82,7 +83,7 @@ export default function Results({ result, onBack, onScanAgain, onAskAgent, onVie
         >
           {/* Plant */}
           <div className="p-6 rounded-xl border border-divider bg-surface" style={{ borderLeft: `4px solid ${statusColor}` }}>
-            <p className="text-xs text-text-secondary uppercase tracking-widest mb-1 font-semibold">Plant</p>
+            <p className="text-xs text-text-secondary uppercase tracking-widest mb-1 font-semibold">{t('plant')}</p>
             <p className="text-2xl font-bold text-text-primary">{result.leafType}</p>
           </div>
 
@@ -94,7 +95,7 @@ export default function Results({ result, onBack, onScanAgain, onAskAgent, onVie
 
           {/* AI Confidence */}
           <div className="p-6 rounded-xl border border-divider bg-surface col-span-2 lg:col-span-1">
-            <p className="text-xs text-text-secondary uppercase tracking-widest mb-1 font-semibold">AI Confidence</p>
+            <p className="text-xs text-text-secondary uppercase tracking-widest mb-1 font-semibold">{t('aiConfidence')}</p>
             <div className="flex items-center gap-2">
               <p className="text-2xl font-bold text-text-primary">{result.confidence}%</p>
               <div className="flex-1 h-2 bg-divider rounded-full overflow-hidden ml-2">
@@ -217,6 +218,109 @@ export default function Results({ result, onBack, onScanAgain, onAskAgent, onVie
             </div>
           </motion.div>
         </div>
+      </div>
+
+      {/* ── Training Metrics Section ─────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-8 pb-20">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98, y: 30 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="rounded-[2.5rem] border border-divider bg-surface overflow-hidden shadow-soft"
+        >
+          <div className="bg-surface-alt px-10 py-10 border-b border-divider flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <div className="space-y-2">
+              <div className="flex items-center gap-4">
+                <div className="p-3.5 rounded-2xl bg-accent-green/20 text-deep-green shadow-sm">
+                  <BarChart3 className="w-7 h-7" />
+                </div>
+                <h2 className="text-3xl font-black text-text-primary tracking-tight leading-none">{t('metricsTitle')}</h2>
+              </div>
+              <p className="text-text-secondary font-medium pl-1 gap-2 flex items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent-green" />
+                {t('performanceStats')}
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-8 bg-white/50 backdrop-blur-sm p-4 rounded-3xl border border-divider">
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-1.5">{t('maxF1')}</span>
+                <span className="text-2xl font-black text-deep-green leading-none">98.1%</span>
+              </div>
+              <div className="w-px h-10 bg-divider" />
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-1.5">{t('precisionLabel')}</span>
+                <span className="text-2xl font-black text-blue-600 leading-none">97.8%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-bg-nature/40 text-text-secondary">
+                  <th className="pl-10 pr-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] border-b border-divider">#</th>
+                  <th className="px-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] border-b border-divider">
+                    <div className="flex items-center gap-2"><Activity className="w-3.5 h-3.5 opacity-60" /> {t('f1ScoreLabel')}</div>
+                  </th>
+                  <th className="px-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] border-b border-divider">
+                    <div className="flex items-center gap-2"><Target className="w-3.5 h-3.5 opacity-60" /> {t('precisionLabel')}</div>
+                  </th>
+                  <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] border-b border-divider">
+                    <div className="flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 opacity-60" /> {t('recallLabel')}</div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-divider/60">
+                {[
+                  [1, 0.9683, 0.9695, 0.9686],
+                  [2, 0.9760, 0.9770, 0.9761],
+                  [3, 0.9701, 0.9711, 0.9705],
+                  [4, 0.9811, 0.9818, 0.9813],
+                  [5, 0.9813, 0.9822, 0.9812],
+                  [6, 0.9796, 0.9813, 0.9800],
+                  [7, 0.9714, 0.9738, 0.9716],
+                  [8, 0.9790, 0.9798, 0.9793],
+                  [9, 0.9809, 0.9817, 0.9812],
+                  [10, 0.9805, 0.9809, 0.9809]
+                ].map(([epoch, f1, prec, rec]) => (
+                  <tr key={epoch} className="group hover:bg-bg-nature/20 transition-colors">
+                    <td className="pl-10 pr-6 py-4.5">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-surface-alt border border-divider text-[11px] font-black text-text-secondary group-hover:bg-deep-green group-hover:text-white group-hover:border-deep-green transition-all">
+                        {epoch.toString().padStart(2, '0')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4.5">
+                      <div className="flex items-center gap-4">
+                        <span className="text-base font-bold text-text-primary tracking-tight">{(f1 * 100).toFixed(2)}%</span>
+                        <div className="flex-1 max-w-[100px] h-1.5 bg-divider rounded-full overflow-hidden shadow-inner hidden sm:block">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${f1 * 100}%` }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                            className="h-full bg-deep-green" 
+                          />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4.5 font-bold text-blue-600/90 text-sm">
+                      {(prec * 100).toFixed(2)}%
+                    </td>
+                    <td className="px-10 py-4.5 font-bold text-amber-600/90 text-sm">
+                      {(rec * 100).toFixed(2)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="px-10 py-6 bg-surface-alt/50 border-t border-divider text-[11px] text-text-secondary flex justify-between items-center font-medium">
+            <span className="tracking-wide">© FarmerMitra-v2 Intelligence Dashboard</span>
+            <span className="opacity-60">Data precision: 10^-4</span>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

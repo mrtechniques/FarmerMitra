@@ -7,13 +7,16 @@ import { validateImage } from '../utils/imageValidation';
 // Dynamic import of exifr to keep initial bundle small
 async function readGPS(file: File): Promise<{ lat: number; lng: number } | null> {
   try {
-    // @ts-ignore
-    const exifr = await import('exifr');
+    // Dynamic import of exifr to keep initial bundle small
+    const exifrModule = await import('exifr');
+    const exifr = exifrModule.default || exifrModule;
     const gps = await exifr.gps(file);
     if (gps && typeof gps.latitude === 'number' && typeof gps.longitude === 'number') {
       return { lat: gps.latitude, lng: gps.longitude };
     }
-  } catch { /* no EXIF */ }
+  } catch (err) {
+    console.warn('[FieldUpload] GPS read failed:', err);
+  }
   return null;
 }
 

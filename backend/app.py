@@ -12,6 +12,7 @@ import io
 import base64
 import json
 import logging
+import time
 from pathlib import Path
 
 import requests
@@ -82,6 +83,8 @@ REMEDIES_DB = {
             "Plant resistant corn hybrids for future seasons.",
             "Practice crop rotation; avoid continuous corn.",
             "Till crop residue to reduce overwintering inoculum.",
+            "Scout for early lesion development in the lower canopy.",
+            "Improve drainage to reduce leaf wetness periods.",
         ],
         "recovery": "3-5 weeks with fungicide treatment",
         "details": "Gray leaf spot (Cercospora zeae-maydis) causes rectangular, tan-to-gray lesions bounded by leaf veins. Severe infection can cause significant yield loss in humid conditions.",
@@ -92,6 +95,8 @@ REMEDIES_DB = {
             "Plant rust-resistant corn hybrids where available.",
             "Scout fields regularly during warm, humid periods.",
             "Early-season infections rarely require treatment; focus on after-tassel infections.",
+            "Ensure balanced fertilization to strengthen plant immunity.",
+            "Manage weeds that can serve as alternative hosts.",
         ],
         "recovery": "2-4 weeks with fungicide treatment",
         "details": "Common rust (Puccinia sorghi) creates small, circular to elongated, cinnamon-brown pustules on both leaf surfaces. Cool nights and warm days favor rapid spread.",
@@ -102,6 +107,8 @@ REMEDIES_DB = {
             "Plant resistant hybrids — the most cost-effective control measure.",
             "Rotate with non-host crops and till infected residue.",
             "Avoid excessive nitrogen fertilization which promotes dense canopies.",
+            "Improve field drainage to reduce humidity within the crop stand.",
+            "Clean farm equipment thoroughly to prevent spreading spores.",
         ],
         "recovery": "3-6 weeks with treatment",
         "details": "Northern Leaf Blight (Exserohilum turcicum) produces large, cigar-shaped, grayish-green lesions up to 15 cm long. Losses can exceed 50% if infection occurs before tasseling.",
@@ -113,6 +120,7 @@ REMEDIES_DB = {
             "Apply balanced nitrogen-phosphorus-potassium (NPK) fertilizer as needed.",
             "Maintain consistent soil moisture, especially during the silking stage.",
             "Use mulch at the base to retain moisture and suppress weed growth.",
+            "Ensure proper plant spacing for optimal sunlight and aeration.",
         ],
         "recovery": "N/A",
         "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
@@ -124,6 +132,8 @@ REMEDIES_DB = {
             "Prune to improve air circulation and reduce leaf wetness periods.",
             "Avoid overhead irrigation; use drip irrigation where possible.",
             "Plant resistant peach varieties suited to your region.",
+            "Remove and destroy any infected fruit or fallen leaves promptly.",
+            "Limit high nitrogen inputs that stimulate late-season succulent growth.",
         ],
         "recovery": "3-5 weeks with treatment",
         "details": "Bacterial spot (Xanthomonas arboricola pv. pruni) causes water-soaked spots on leaves that turn brown with a yellow halo. It also affects fruit and twigs, reducing marketability.",
@@ -133,6 +143,9 @@ REMEDIES_DB = {
             "No treatment needed — your peach tree looks healthy!",
             "Maintain a regular spray schedule for preventive disease management.",
             "Prune during dry weather to minimize disease entry points.",
+            "Apply organic compost to promote healthy root systems.",
+            "Thin fruit clusters to prevent branch breakage and improve fruit size.",
+            "Monitor for early signs of borer infestation or trunk damage.",
         ],
         "recovery": "N/A",
         "details": "The plant appears healthy with no visible signs of disease. Continue regular monitoring.",
@@ -144,6 +157,8 @@ REMEDIES_DB = {
             "Use certified pathogen-free transplants and seeds.",
             "Avoid overhead irrigation and working with wet plants.",
             "Rotate peppers with non-solanaceous crops for 2-3 years.",
+            "Control weeds that may harbor the bacterial pathogen.",
+            "Sanitize garden tools and hands before handling healthy plants.",
         ],
         "recovery": "2-4 weeks with treatment",
         "details": "Bacterial spot (Xanthomonas campestris pv. vesicatoria) creates water-soaked lesions that dry and crack on leaves and fruit. It thrives in warm, wet weather and spreads rapidly.",
@@ -153,6 +168,9 @@ REMEDIES_DB = {
             "No treatment needed — your pepper plant looks healthy!",
             "Continue regular scouting and preventive disease management.",
             "Ensure consistent watering and balanced fertilization.",
+            "Stake plants to provide support for heavy fruit sets.",
+            "Keep the area around the base free of debris and weeds.",
+            "Check the undersides of leaves for pests like aphids or mites.",
         ],
         "recovery": "N/A",
         "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
@@ -176,6 +194,8 @@ REMEDIES_DB = {
             "Apply specialized fungicides (metalaxyl, chlorothalonil) on a 7-day schedule.",
             "Plant certified disease-free seed potatoes next season.",
             "Avoid overhead irrigation; ensure good field drainage.",
+            "Apply copper-based sprays if the disease is localized and early.",
+            "Harvest tubers as soon as possible if the canopy is dying back.",
         ],
         "recovery": "Requires intensive management; 10-14 days treatment cycle",
         "details": "Late blight (Phytophthora infestans) — the pathogen behind the Irish Famine — spreads explosively in cool, wet conditions. It can destroy an entire crop within days if untreated.",
@@ -185,6 +205,9 @@ REMEDIES_DB = {
             "No treatment needed — your potato plant looks healthy!",
             "Scout regularly and apply preventive fungicides during humid periods.",
             "Hill soil around stems to protect developing tubers.",
+            "Apply organic compost to enrich the soil for tuber development.",
+            "Ensure proper drainage to prevent waterlogging and root rot.",
+            "Keep the field free of potato volunteer plants from previous seasons.",
         ],
         "recovery": "N/A",
         "details": "The plant appears healthy with no visible signs of disease. Continue regular monitoring.",
@@ -198,6 +221,7 @@ REMEDIES_DB = {
             "Remove and destroy heavily infected leaves promptly (do not compost).",
             "Spray a mixture of 1 part milk to 9 parts water as an organic preventive.",
             "Use baking soda spray (1 tbsp baking soda, 1 tsp liquid soap per gallon of water).",
+            "Plant resistant squash varieties in future growing seasons.",
         ],
         "recovery": "2-3 weeks with treatment",
         "details": "Powdery mildew (Podosphaera xanthii) forms white, powdery fungal colonies on leaf surfaces. It thrives in warm days with cool nights and can reduce photosynthesis significantly.",
@@ -209,6 +233,9 @@ REMEDIES_DB = {
             "Remove and destroy infected leaves and plant debris.",
             "Ensure good plant spacing and air circulation.",
             "Renovate strawberry beds after fruiting to remove old infected foliage.",
+            "Avoid high nitrogen applications in early spring which softens tissues.",
+            "Apply mulch (e.g., pine needles or straw) to keep berries off damp soil.",
+            "Regularly inspect plant crowns for rot or borer damage.",
         ],
         "recovery": "3-4 weeks with treatment",
         "details": "Leaf scorch (Diplocarpon earlianum) creates small, dark purple spots with tan centers that merge, giving leaves a 'scorched' appearance. Severe infection reduces runner and fruit production.",
@@ -218,6 +245,10 @@ REMEDIES_DB = {
             "No treatment needed — your strawberry plant looks healthy!",
             "Mulch around plants to prevent soil splash and maintain moisture.",
             "Renovate beds after harvest to reduce disease pressure.",
+            "Apply balanced fertilizer in late summer to promote next year's crop.",
+            "Keep the planting area weed-free to reduce competition and improve airflow.",
+            "Monitor soil moisture frequently; strawberries have shallow roots.",
+            "Apply specialized strawberry fertilizer to maintain plant vigor.",
         ],
         "recovery": "N/A",
         "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
@@ -238,6 +269,9 @@ REMEDIES_DB = {
             "No treatment needed — your apple plant looks healthy!",
             "Continue regular monitoring and preventive care.",
             "Maintain proper pruning during dormant season.",
+            "Ensure consistent moisture during dry spells, especially for young trees.",
+            "Apply organic mulch around the root zone to suppress weeds.",
+            "Maintain a clear area around the trunk to prevent rodent damage.",
         ],
         "recovery": "N/A",
         "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
@@ -279,6 +313,9 @@ REMEDIES_DB = {
             "No treatment needed — your tomato plant looks healthy!",
             "Continue preventive spray schedule and monitor regularly.",
             "Ensure consistent watering and nutrition.",
+            "Provide strong physical support with cages or high-quality stakes.",
+            "Check for pests like hornworms or whiteflies weekly.",
+            "Maintain a clean base area free of dead foliage or weeds.",
         ],
         "recovery": "N/A",
         "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
@@ -309,6 +346,8 @@ REMEDIES_DB = {
             "Control aphid populations — they spread the virus.",
             "Wash hands and sterilize tools before handling plants.",
             "Plant certified virus-free seeds and resistant varieties.",
+            "Remove solanaceous weeds around the garden (e.g., nightshades).",
+            "Avoid smoking near plants; tobacco can carry the virus.",
         ],
         "recovery": "No cure — prevention and removal are key",
         "details": "Tomato mosaic virus causes mottled light and dark green patterns on leaves with distortion and stunting. It spreads easily through contact and tools.",
@@ -340,6 +379,9 @@ REMEDIES_DB = {
             "No treatment needed — your grape plant looks healthy!",
             "Maintain preventive spray schedule during humid periods.",
             "Continue good canopy management practices.",
+            "Ensure proper soil drainage and balanced vine nutrition.",
+            "Remove any dead wood during dormant season pruning.",
+            "Scout for early signs of mildew or berry shriveling.",
         ],
         "recovery": "N/A",
         "details": "The plant appears healthy with no visible signs of disease. Keep monitoring regularly.",
@@ -371,6 +413,8 @@ REMEDIES_DB = {
             "Apply copper-based fungicide sprays during the growing season.",
             "Prune out diseased wood and dispose of it away from the orchard.",
             "Ensure good drainage and avoid wounding trees.",
+            "Protect developing fruit with labeled fungicides from petal fall through harvest.",
+            "Limit large pruning cuts to late winter when the fungus is less active.",
         ],
         "recovery": "4-8 weeks",
         "details": "Black rot is caused by Botryosphaeria obtusa. It affects fruit, leaves, and bark, causing significant economic losses in untreated orchards.",
@@ -390,6 +434,9 @@ REMEDIES_DB = {
             "No treatment needed - your apple plant looks healthy!",
             "Continue regular monitoring and preventive care.",
             "Maintain proper pruning during dormant season.",
+            "Ensure the tree receives 1-2 inches of water per week in dry months.",
+            "Protect the trunk with guards to prevent rabbit or deer damage.",
+            "Apply balanced fertilizer in early spring before new growth starts.",
         ],
         "recovery": "N/A",
         "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
@@ -407,9 +454,11 @@ REMEDIES_DB = {
     "Grape___Esca_(Black_Measles)": {
         "remedies": [
             "Prune during dry weather and apply wound protectants immediately.",
-            "Remove and destroy heavily infected vines.",
+            "Remove and destroy heavily infected vines (trunk and roots).",
             "Avoid large pruning cuts; use double pruning techniques.",
             "There is no curative treatment - focus on prevention.",
+            "Increase vine vigor through proper fertilization and irrigation.",
+            "Ensure pruning tools are disinfected with alcohol between vines.",
         ],
         "recovery": "Long-term management required",
         "details": "Esca (Black Measles) is a complex wood disease caused by multiple fungal pathogens. It causes tiger-stripe leaf symptoms and internal wood decay.",
@@ -420,6 +469,8 @@ REMEDIES_DB = {
             "Improve vineyard airflow through pruning and training.",
             "Avoid working in the vineyard when vines are wet.",
             "Remove infected leaves and debris from the vineyard floor.",
+            "Monitor for angular brown lesions weekly during the growing season.",
+            "Ensure proper vine spacing to reduce humidity near the soil.",
         ],
         "recovery": "2-3 weeks with fungicide treatment",
         "details": "Isariopsis leaf spot causes angular brown lesions on grape leaves, often with a yellowish halo, reducing photosynthesis and vine vigor.",
@@ -429,6 +480,9 @@ REMEDIES_DB = {
             "No treatment needed - your grape plant looks healthy!",
             "Maintain preventive spray schedule during humid periods.",
             "Continue good canopy management practices.",
+            "Apply organic mulch to maintain steady soil moisture.",
+            "Avoid excessive nitrogen which can lead to overly dense foliage.",
+            "Maintain a 10-foot weed-free zone around the vineyard perimeter.",
         ],
         "recovery": "N/A",
         "details": "The plant appears healthy with no visible signs of disease. Keep monitoring regularly.",
@@ -439,6 +493,8 @@ REMEDIES_DB = {
             "Use pathogen-free or certified seed and transplants.",
             "Avoid overhead irrigation and working with wet plants.",
             "Rotate tomato crops with non-host crops for 2-3 years.",
+            "Control volunteer tomato plants that could harbor bacteria.",
+            "Regularly scout for the first signs of small, water-soaked spots.",
         ],
         "recovery": "2-4 weeks with treatment",
         "details": "Bacterial spot is caused by Xanthomonas species. It creates water-soaked spots that turn brown and scabby on leaves and fruit.",
@@ -449,6 +505,8 @@ REMEDIES_DB = {
             "Remove lower infected leaves to slow disease spread.",
             "Mulch around plants to prevent soil splash.",
             "Avoid overhead watering; water at the base in the morning.",
+            "Maintain high soil fertility with balanced organic matter.",
+            "Stake or cage plants to keep foliage away from the ground.",
         ],
         "recovery": "2-3 weeks with treatment",
         "details": "Early blight is caused by Alternaria solani. It creates dark bull's-eye shaped lesions on older leaves, starting from the bottom of the plant.",
@@ -459,6 +517,8 @@ REMEDIES_DB = {
             "Apply specialized fungicides containing chlorothalonil or copper.",
             "Avoid overhead irrigation and ensure plants are dry before nightfall.",
             "Plant resistant tomato varieties in future seasons.",
+            "Monitor weather forecasts; late blight thrives in cool, wet weather.",
+            "Avoid planting tomatoes near potatoes to reduce cross-infection risk.",
         ],
         "recovery": "10-15 days with intensive treatment",
         "details": "Late blight is caused by Phytophthora infestans. It spreads rapidly in cool, wet weather and can destroy entire crops within days if not controlled.",
@@ -469,6 +529,8 @@ REMEDIES_DB = {
             "Apply fungicides (chlorothalonil, mancozeb) at first sign of infection.",
             "Avoid wetting foliage during irrigation.",
             "Remove and destroy infected plant debris after harvest.",
+            "Use horizontal airflow fans in the greenhouse to improve circulation.",
+            "Prune the canopy to allow light to reach the center of the plant.",
         ],
         "recovery": "2-3 weeks",
         "details": "Leaf mold is caused by Passalora fulva. It appears as pale green or yellow spots on upper leaf surfaces with olive-green mold on the underside.",
@@ -479,6 +541,8 @@ REMEDIES_DB = {
             "Remove and destroy infected lower leaves.",
             "Mulch soil to prevent spore splash from soil to leaves.",
             "Rotate crops and avoid planting tomatoes in the same spot yearly.",
+            "Provide adequate spacing (at least 24 inches) for better airflow.",
+            "Prune lower branches (up to 12 inches) to prevent contact with soil.",
         ],
         "recovery": "3-4 weeks",
         "details": "Septoria leaf spot is caused by Septoria lycopersici. It creates circular spots with dark borders and grey centers, starting on lower leaves.",
@@ -489,6 +553,8 @@ REMEDIES_DB = {
             "Increase humidity around plants - mites prefer hot, dry conditions.",
             "Introduce predatory mites (Phytoseiulus persimilis) as biological control.",
             "Remove heavily infested leaves and dispose of them away from the garden.",
+            "Hose down plants with a strong stream of water to dislodge mites.",
+            "Use neem oil as an organic option to control mite populations.",
         ],
         "recovery": "1-2 weeks with treatment",
         "details": "Spider mites create fine webbing on leaves and cause stippling damage. Severe infestations can defoliate plants completely during hot, dry weather.",
@@ -499,6 +565,8 @@ REMEDIES_DB = {
             "Improve plant spacing for better air circulation.",
             "Avoid overhead irrigation and water early so foliage dries quickly.",
             "Remove and destroy infected plant material.",
+            "Maintain higher soil potassium levels to improve plant resistance.",
+            "Keep the area clean of all crop residues at the end of the season.",
         ],
         "recovery": "2-4 weeks",
         "details": "Target spot is caused by Corynespora cassiicola. It creates concentric ring patterns on leaves, stems, and fruit, resembling a target.",
@@ -509,6 +577,8 @@ REMEDIES_DB = {
             "Use reflective mulches to repel whiteflies from plants.",
             "Remove and destroy infected plants to prevent virus spread.",
             "Plant resistant or tolerant tomato varieties.",
+            "Install fine-mesh insect screening for greenhouse production.",
+            "Avoid transporting plants from areas known to have whitefly infestations.",
         ],
         "recovery": "No cure - infected plants should be removed",
         "details": "TYLCV is transmitted by whiteflies. It causes severe stunting, yellow leaf curling, and dramatic yield reduction. There is no cure once infected.",
@@ -519,6 +589,8 @@ REMEDIES_DB = {
             "Control aphid populations - they spread the virus.",
             "Wash hands and sterilize tools before handling plants.",
             "Plant certified virus-free seeds and resistant varieties.",
+            "Control nearby weeds like nightshade or groundcherry.",
+            "Avoid using tobacco products near tomato plants.",
         ],
         "recovery": "No cure - prevention and removal are key",
         "details": "Tomato mosaic virus causes mottled light and dark green patterns on leaves with distortion and stunting. It spreads easily through contact and tools.",
@@ -528,6 +600,9 @@ REMEDIES_DB = {
             "No treatment needed - your tomato plant looks healthy!",
             "Continue preventive spray schedule and monitor regularly.",
             "Ensure consistent watering and nutrition.",
+            "Apply organic mulch to stabilize soil temperature and moisture.",
+            "Prune sucker growth to improve light penetration and airflow.",
+            "Apply balanced fertilizer according to a regular schedule.",
         ],
         "recovery": "N/A",
         "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
@@ -539,6 +614,10 @@ LANGUAGE_NAMES = {
     "hi": "Hindi",
     "kn": "Kannada",
     "ml": "Malayalam",
+    "ta": "Tamil",
+    "mr": "Marathi",
+    "te": "Telugu",
+    "bn": "Bengali",
 }
 
 
@@ -553,11 +632,27 @@ def translate_result(disease: str, leaf_type: str, details: str, remedies: list,
         return {"disease": disease, "leafType": leaf_type, "details": details, "remedies": remedies, "recoveryTime": recovery}
 
     lang_name = LANGUAGE_NAMES[lang]
-    remedies_str = "\n".join(f"- {r}" for r in remedies)
-    prompt = f"""Translate the following agricultural disease information strictly into {lang_name}. Return ONLY valid JSON with these exact keys: disease, leafType, details, remedies (array of strings), recoveryTime. Do not add extra keys, markdown, or explanation.
+    prompt = f"""You are an agricultural expert and translator. 
+Translate the following plant disease diagnosis into {lang_name}.
+Ensure the tone is helpful and accurate for a farmer.
 
-Source JSON:
-{{"disease": "{disease}", "leafType": "{leaf_type}", "details": "{details}", "remedies": {json.dumps(remedies)}, "recoveryTime": "{recovery}"}}"""
+Return ONLY a strictly valid JSON object with these exact keys: 
+- disease (translated disease name)
+- leafType (translated plant name)
+- details (translated diagnosis summary)
+- remedies (an array of translated actionable points)
+- recoveryTime (translated recovery estimate)
+
+Source Data:
+{{
+  "disease": "{disease}",
+  "leafType": "{leaf_type}",
+  "details": "{details}",
+  "remedies": {json.dumps(remedies)},
+  "recoveryTime": "{recovery}"
+}}
+
+Translated JSON:"""
 
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
@@ -921,21 +1016,21 @@ _PLAIN_LABEL_MAP = {
 }
 
 
-def validate_is_plant_gemini(img) -> bool:
+def validate_is_plant_gemini(img) -> tuple[bool, str]:
     """Uses Gemini Vision to semantically verify if the main subject is a plant/leaf."""
     api_key = os.getenv("GEMINI_API_KEY", "")
     if not api_key:
-        return True  # Bypass if no key configured
+        return True, ""  # Bypass if no key configured
 
     try:
         model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
         
-        # Fast Heuristic: Reject solid colors (white, black, etc)
+        # Fast Heuristic: Reject solid colors (standard deviation check)
         import numpy as np
         img_np = np.array(img.convert("L"))
-        if np.std(img_np) < 5:
+        if np.std(img_np) < 3.5:
             log.warning("Image rejected: Too uniform (solid color detected).")
-            return False
+            return False, "This photo appears too uniform. Please capture a real plant leaf up-close."
 
         # Resize image for fast transmission (~40KB)
         thumb = img.copy()
@@ -949,7 +1044,7 @@ def validate_is_plant_gemini(img) -> bool:
         payload = {
             "contents": [{
                 "parts": [
-                    {"text": "Strictly analyze this image. Your goal is to identify if it is an up-close (macro) photo of a real living leaf, plant part, or crop for disease diagnosis. Reject everything else."},
+                    {"text": "You are a strict image validation AI. Look at this image. Does the primary subject consist of a real agricultural plant, crop, or leaf? If the image shows a person, face, animal, vehicle, indoor room, or any non-plant subject, you MUST return is_plant: false and provide a reason. Do not attempt to diagnose any diseases. Return JSON."},
                     {"inlineData": {"mimeType": mime_type, "data": encoded}}
                 ]
             }],
@@ -961,22 +1056,64 @@ def validate_is_plant_gemini(img) -> bool:
                     "properties": {
                         "is_plant": {
                             "type": "BOOLEAN",
-                            "description": "True ONLY if a real plant, leaf, or crop is the clear, primary focal point. You MUST return False if it is: 1) A plain green texture/wall, 2) A landscape field from far away, 3) A human/animal, or 4) A non-biological object. There must be visible biological leaf features like veins, serrations, or distinct plant structures."
+                            "description": "True if a plant leaf or crop exists."
+                        },
+                        "reason": {
+                            "type": "STRING",
+                            "description": "Short explanation if rejected."
                         }
                     },
-                    "required": ["is_plant"]
+                    "required": ["is_plant", "reason"]
                 }
             }
         }
-        res = requests.post(url, json=payload, timeout=10)
-        res.raise_for_status()
-        text = res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-        data = json.loads(text)
-        return data.get("is_plant", False)
+        # Retry logic: Try 3 times with exponential backoff on 429
+        for attempt in range(3):
+            try:
+                res = requests.post(url, json=payload, timeout=15)
+                res.raise_for_status()
+                
+                text = res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                data = json.loads(text)
+                return bool(data.get("is_plant", False)), data.get("reason", "No plant detected.")
+                
+            except requests.exceptions.HTTPError as he:
+                status_code = he.response.status_code if he.response is not None else 500
+                
+                if status_code == 429:
+                    wait_time = (2 ** attempt) + 1
+                    log.warning(f"Gemini Rate Limit (429) hit. Retrying in {wait_time}s... (Attempt {attempt+1}/3)")
+                    time.sleep(wait_time)
+                    continue
+                
+                if status_code == 404:
+                    log.error(f"Gemini Model '{model_name}' not found. Check your .env configuration.")
+                    return False, f"Model '{model_name}' not found. Please update GEMINI_MODEL."
+                
+                # If it's a different HTTP error, don't retry unless it's a 5xx
+                if status_code < 500:
+                    return False, f"AI validation service error: {str(he)}"
+                
+                # For 5xx, we might want to retry but usually only once
+                if attempt < 2:
+                    time.sleep(1)
+                    continue
+                raise
+            except Exception as inner_e:
+                # Other errors (network, json parsing)
+                if attempt < 2:
+                    time.sleep(1)
+                    continue
+                raise
+
+        return False, "Gemini service busy after multiple retries. Please try again in 1 minute."
+
     except Exception as e:
         log.error(f"Gemini validation failed: {e}")
-        # Completely rely on Gemini API. Throw an error if the validation API drops.
-        raise ValueError("AI Validation Service is temporarily unavailable. Please try again.")
+        # Final fallback - treat as invalid image rather than crashing 500
+        return False, f"AI validation failed: {str(e)}"
+
+
 
 
 def generate_dynamic_remedies_gemini(plant: str, disease: str, confidence: float, fallback_info: dict) -> dict:
@@ -993,13 +1130,13 @@ def generate_dynamic_remedies_gemini(plant: str, disease: str, confidence: float
         if is_healthy:
             prompt = (
                 f"A farmer's {plant} leaf scan returned healthy (confidence {confidence}%). "
-                "Provide exactly 5 to 7 brief, actionable points covering best practices to maintain health and prevent future diseases (Prevention Measures). "
+                "Provide exactly 9 to 12 brief, actionable points covering best practices to maintain health and prevent future diseases (Prevention Measures). "
                 "Format strict JSON: {\"remedies\": [\"point\", \"point\"], \"recovery\": \"N/A\", \"details\": \"1 summary sentence.\"}"
             )
         else:
             prompt = (
                 f"A farmer's {plant} scan detected '{disease}' (confidence {confidence}%). "
-                "Provide exactly 5 to 7 brief, actionable points covering BOTH immediate remedies and future prevention measures. "
+                "Provide exactly 9 to 12 brief, actionable points covering BOTH immediate remedies and future prevention measures. "
                 "Format strict JSON: {\"remedies\": [\"point\", \"point\"], \"recovery\": \"Estimated time (e.g. 7-14 days)\", \"details\": \"1-2 summary sentences.\"}"
             )
             
@@ -1014,7 +1151,7 @@ def generate_dynamic_remedies_gemini(plant: str, disease: str, confidence: float
         
         if "remedies" in data and isinstance(data["remedies"], list) and len(data["remedies"]) > 0:
             return {
-                "remedies": data["remedies"][:7],
+                "remedies": data["remedies"][:8],
                 "recovery": data.get("recovery", fallback_info["recovery"]),
                 "details": data.get("details", fallback_info["details"])
             }
@@ -1040,6 +1177,14 @@ def class_name_to_label(class_name: str):
 
 
 # ─── Routes ──────────────────────────────────────────────────────────────────
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({
+        "app": "FarmerMitra Disease Detection Backend",
+        "endpoints": ["/api/health", "/api/predict"],
+        "status": "running"
+    })
+
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({
@@ -1068,12 +1213,14 @@ def predict():
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
 
-        # Semantic Out-of-Distribution Validation via Gemini
-        is_plant = validate_is_plant_gemini(img)
+        # Semantic Out-of-Distribution & Quality Validation via Gemini
+        is_plant, reason = validate_is_plant_gemini(img)
         if not is_plant:
+            log.warning(f"Image rejected: {reason}")
             return jsonify({
-                "error": "Image rejected: No clear plant or leaf detected. Please upload an image primarily focusing on a crop."
-            }), 400
+                "error": "Scan rejected",
+                "reason": reason if reason else "Please upload a clear plant photo for diagnosis."
+            }), 422
 
         tensor = transform(img).unsqueeze(0)
 

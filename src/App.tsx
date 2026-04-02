@@ -34,7 +34,7 @@ function AppContent() {
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `Server error: ${response.status}`);
+        throw new Error(errData.reason || errData.error || `Server error: ${response.status}`);
       }
 
       const data = await response.json();

@@ -21,8 +21,8 @@ echo [INFO] Checking and installing dependencies...
 pip install -r requirements.txt --quiet
 
 REM Check if model file exists
-if not exist "models\trained_model_weights.pth" (
-    echo [ERROR] Model file not found at: models\trained_model_weights.pth
+if not exist "models\farmer-mitra_weights.pth" (
+    echo [ERROR] Model file not found at: models\farmer-mitra_weights.pth
     echo Please make sure the model file is in the correct location.
     pause
     exit /b 1

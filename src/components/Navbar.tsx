@@ -25,6 +25,10 @@ export default function Navbar({ currentPage, onPageChange }: NavbarProps) {
     { id: 'hi', label: 'हिंदी' },
     { id: 'kn', label: 'ಕನ್ನಡ' },
     { id: 'ml', label: 'മലയാളം' },
+    { id: 'ta', label: 'தமிழ்' },
+    { id: 'mr', label: 'मराठी' },
+    { id: 'te', label: 'తెలుగు' },
+    { id: 'bn', label: 'বাংলা' },
   ];
 
   return (
