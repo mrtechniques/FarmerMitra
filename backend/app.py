@@ -34,34 +34,327 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # ─── Model Configuration ─────────────────────────────────────────────────────
-MODEL_PATH = Path(__file__).parent / "models" / "trained_model_weights.pth"
+MODEL_PATH = Path(__file__).parent / "models" / "farmer-mitra_weights.pth"
 
-# 18 classes: Apple(4) + Grape(4) + Tomato(10)
+# 31 classes — exact label order from training dataset
 CLASS_NAMES = [
-    "Apple___Apple_scab",
-    "Apple___Black_rot",
-    "Apple___Cedar_apple_rust",
-    "Apple___healthy",
-    "Grape___Black_rot",
-    "Grape___Esca_(Black_Measles)",
-    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
-    "Grape___healthy",
-    "Tomato___Bacterial_spot",
-    "Tomato___Early_blight",
-    "Tomato___Late_blight",
-    "Tomato___Leaf_Mold",
-    "Tomato___Septoria_leaf_spot",
-    "Tomato___Spider_mites Two-spotted_spider_mite",
-    "Tomato___Target_Spot",
-    "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
-    "Tomato___Tomato_mosaic_virus",
-    "Tomato___healthy",
+    "Apple Scab Leaf",                                       #  0
+    "Apple leaf",                                            #  1
+    "Apple rust leaf",                                       #  2
+    "Apple___Apple_scab",                                    #  3
+    "Apple___Black_rot",                                     #  4
+    "Apple___Cedar_apple_rust",                              #  5
+    "Apple___healthy",                                       #  6
+    "Grape___Black_rot",                                     #  7
+    "Grape___Esca_(Black_Measles)",                          #  8
+    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",            #  9
+    "Grape___healthy",                                       # 10
+    "Tomato Early blight leaf",                              # 11
+    "Tomato Septoria leaf spot",                             # 12
+    "Tomato leaf",                                           # 13
+    "Tomato leaf bacterial spot",                            # 14
+    "Tomato leaf late blight",                               # 15
+    "Tomato leaf mosaic virus",                              # 16
+    "Tomato leaf yellow virus",                              # 17
+    "Tomato mold leaf",                                      # 18
+    "Tomato___Bacterial_spot",                               # 19
+    "Tomato___Early_blight",                                 # 20
+    "Tomato___Late_blight",                                  # 21
+    "Tomato___Leaf_Mold",                                    # 22
+    "Tomato___Septoria_leaf_spot",                           # 23
+    "Tomato___Spider_mites Two-spotted_spider_mite",         # 24
+    "Tomato___Target_Spot",                                  # 25
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus",                # 26
+    "Tomato___Tomato_mosaic_virus",                          # 27
+    "Tomato___healthy",                                      # 28
+    "grape leaf",                                            # 29
+    "grape leaf black rot",                                  # 30
 ]
 
-NUM_CLASSES = len(CLASS_NAMES)  # 18
+NUM_CLASSES = len(CLASS_NAMES)  # 31
 
 # ─── Disease Remedies Database ───────────────────────────────────────────────
 REMEDIES_DB = {
+    # ── Corn ──────────────────────────────────────────────────────────────────
+    "Corn___Cercospora_leaf_spot Gray_leaf_spot": {
+        "remedies": [
+            "Apply foliar fungicides (azoxystrobin, pyraclostrobin) at early tasseling.",
+            "Plant resistant corn hybrids for future seasons.",
+            "Practice crop rotation; avoid continuous corn.",
+            "Till crop residue to reduce overwintering inoculum.",
+        ],
+        "recovery": "3-5 weeks with fungicide treatment",
+        "details": "Gray leaf spot (Cercospora zeae-maydis) causes rectangular, tan-to-gray lesions bounded by leaf veins. Severe infection can cause significant yield loss in humid conditions.",
+    },
+    "Corn___Common_rust": {
+        "remedies": [
+            "Apply fungicides (triazoles, strobilurins) when rust pustules first appear.",
+            "Plant rust-resistant corn hybrids where available.",
+            "Scout fields regularly during warm, humid periods.",
+            "Early-season infections rarely require treatment; focus on after-tassel infections.",
+        ],
+        "recovery": "2-4 weeks with fungicide treatment",
+        "details": "Common rust (Puccinia sorghi) creates small, circular to elongated, cinnamon-brown pustules on both leaf surfaces. Cool nights and warm days favor rapid spread.",
+    },
+    "Corn___Northern_Leaf_Blight": {
+        "remedies": [
+            "Apply foliar fungicides (azoxystrobin, propiconazole) at early disease onset.",
+            "Plant resistant hybrids — the most cost-effective control measure.",
+            "Rotate with non-host crops and till infected residue.",
+            "Avoid excessive nitrogen fertilization which promotes dense canopies.",
+        ],
+        "recovery": "3-6 weeks with treatment",
+        "details": "Northern Leaf Blight (Exserohilum turcicum) produces large, cigar-shaped, grayish-green lesions up to 15 cm long. Losses can exceed 50% if infection occurs before tasseling.",
+    },
+    "Corn___healthy": {
+        "remedies": [
+            "No treatment needed — your corn plant looks healthy!",
+            "Continue scouting for pests and diseases throughout the season.",
+            "Apply balanced nitrogen-phosphorus-potassium (NPK) fertilizer as needed.",
+            "Maintain consistent soil moisture, especially during the silking stage.",
+            "Use mulch at the base to retain moisture and suppress weed growth.",
+        ],
+        "recovery": "N/A",
+        "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
+    },
+    # ── Peach ─────────────────────────────────────────────────────────────────
+    "Peach___Bacterial_spot": {
+        "remedies": [
+            "Apply copper-based bactericides starting at bud swell and through petal fall.",
+            "Prune to improve air circulation and reduce leaf wetness periods.",
+            "Avoid overhead irrigation; use drip irrigation where possible.",
+            "Plant resistant peach varieties suited to your region.",
+        ],
+        "recovery": "3-5 weeks with treatment",
+        "details": "Bacterial spot (Xanthomonas arboricola pv. pruni) causes water-soaked spots on leaves that turn brown with a yellow halo. It also affects fruit and twigs, reducing marketability.",
+    },
+    "Peach___healthy": {
+        "remedies": [
+            "No treatment needed — your peach tree looks healthy!",
+            "Maintain a regular spray schedule for preventive disease management.",
+            "Prune during dry weather to minimize disease entry points.",
+        ],
+        "recovery": "N/A",
+        "details": "The plant appears healthy with no visible signs of disease. Continue regular monitoring.",
+    },
+    # ── Pepper ────────────────────────────────────────────────────────────────
+    "Pepper,_bell___Bacterial_spot": {
+        "remedies": [
+            "Apply copper-based bactericides preventively, especially before wet weather.",
+            "Use certified pathogen-free transplants and seeds.",
+            "Avoid overhead irrigation and working with wet plants.",
+            "Rotate peppers with non-solanaceous crops for 2-3 years.",
+        ],
+        "recovery": "2-4 weeks with treatment",
+        "details": "Bacterial spot (Xanthomonas campestris pv. vesicatoria) creates water-soaked lesions that dry and crack on leaves and fruit. It thrives in warm, wet weather and spreads rapidly.",
+    },
+    "Pepper,_bell___healthy": {
+        "remedies": [
+            "No treatment needed — your pepper plant looks healthy!",
+            "Continue regular scouting and preventive disease management.",
+            "Ensure consistent watering and balanced fertilization.",
+        ],
+        "recovery": "N/A",
+        "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
+    },
+    # ── Potato ────────────────────────────────────────────────────────────────
+    "Potato___Early_blight": {
+        "remedies": [
+            "Apply fungicides (chlorothalonil, mancozeb) preventively after canopy closure.",
+            "Remove and destroy heavily infected lower leaves promptly.",
+            "Maintain proper plant nutrition — stressed plants are more susceptible.",
+            "Rotate potatoes with non-solanaceous crops (e.g., beans, legumes) for 2 years.",
+            "Avoid overhead irrigation; use drip tapes or water at the base in early morning.",
+            "Apply organic neem oil spray during early stages to slow disease spread.",
+        ],
+        "recovery": "2-4 weeks with fungicide treatment",
+        "details": "Early blight (Alternaria solani) causes dark, concentric bull's-eye lesions with yellow halos on older leaves. It progresses from lower to upper leaves and can defoliate plants.",
+    },
+    "Potato___Late_blight": {
+        "remedies": [
+            "Destroy all infected plant parts immediately to halt spread.",
+            "Apply specialized fungicides (metalaxyl, chlorothalonil) on a 7-day schedule.",
+            "Plant certified disease-free seed potatoes next season.",
+            "Avoid overhead irrigation; ensure good field drainage.",
+        ],
+        "recovery": "Requires intensive management; 10-14 days treatment cycle",
+        "details": "Late blight (Phytophthora infestans) — the pathogen behind the Irish Famine — spreads explosively in cool, wet conditions. It can destroy an entire crop within days if untreated.",
+    },
+    "Potato___healthy": {
+        "remedies": [
+            "No treatment needed — your potato plant looks healthy!",
+            "Scout regularly and apply preventive fungicides during humid periods.",
+            "Hill soil around stems to protect developing tubers.",
+        ],
+        "recovery": "N/A",
+        "details": "The plant appears healthy with no visible signs of disease. Continue regular monitoring.",
+    },
+    # ── Squash ────────────────────────────────────────────────────────────────
+    "Squash___Powdery_mildew": {
+        "remedies": [
+            "Apply fungicides (potassium bicarbonate, sulfur, or neem oil) at first sign.",
+            "Improve air circulation by spacing plants adequately and pruning dense growth.",
+            "Avoid overhead irrigation; water at the base early in the day.",
+            "Remove and destroy heavily infected leaves promptly (do not compost).",
+            "Spray a mixture of 1 part milk to 9 parts water as an organic preventive.",
+            "Use baking soda spray (1 tbsp baking soda, 1 tsp liquid soap per gallon of water).",
+        ],
+        "recovery": "2-3 weeks with treatment",
+        "details": "Powdery mildew (Podosphaera xanthii) forms white, powdery fungal colonies on leaf surfaces. It thrives in warm days with cool nights and can reduce photosynthesis significantly.",
+    },
+    # ── Strawberry ────────────────────────────────────────────────────────────
+    "Strawberry___Leaf_scorch": {
+        "remedies": [
+            "Apply fungicides (myclobutanil or captan) preventively in spring.",
+            "Remove and destroy infected leaves and plant debris.",
+            "Ensure good plant spacing and air circulation.",
+            "Renovate strawberry beds after fruiting to remove old infected foliage.",
+        ],
+        "recovery": "3-4 weeks with treatment",
+        "details": "Leaf scorch (Diplocarpon earlianum) creates small, dark purple spots with tan centers that merge, giving leaves a 'scorched' appearance. Severe infection reduces runner and fruit production.",
+    },
+    "Strawberry___healthy": {
+        "remedies": [
+            "No treatment needed — your strawberry plant looks healthy!",
+            "Mulch around plants to prevent soil splash and maintain moisture.",
+            "Renovate beds after harvest to reduce disease pressure.",
+        ],
+        "recovery": "N/A",
+        "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
+    },
+    # ── Plain-English class aliases (same remedy data as standard counterparts) ─
+    "Apple Scab Leaf": {
+        "remedies": [
+            "Apply fungicides (captan, myclobutanil) at green tip and throughout spring.",
+            "Remove and destroy fallen leaves to reduce overwintering spores.",
+            "Prune trees to improve air circulation and reduce humidity.",
+            "Plant scab-resistant apple varieties where possible.",
+        ],
+        "recovery": "3-6 weeks with proper treatment",
+        "details": "Apple scab (Venturia inaequalis) creates dark, scabby lesions on leaves and fruit, leading to defoliation and reduced yield.",
+    },
+    "Apple leaf": {
+        "remedies": [
+            "No treatment needed — your apple plant looks healthy!",
+            "Continue regular monitoring and preventive care.",
+            "Maintain proper pruning during dormant season.",
+        ],
+        "recovery": "N/A",
+        "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
+    },
+    "Apple rust leaf": {
+        "remedies": [
+            "Apply fungicides (myclobutanil, triadimefon) from pink bud stage through petal fall.",
+            "Remove nearby Eastern red cedar trees if possible.",
+            "Plant rust-resistant apple varieties.",
+            "Monitor for orange jelly-like spore masses on cedars in spring.",
+        ],
+        "recovery": "2-4 weeks with treatment",
+        "details": "Cedar apple rust requires two hosts: apple and Eastern red cedar. It causes yellow-orange spots on leaves.",
+    },
+    "Tomato Early blight leaf": {
+        "remedies": [
+            "Apply fungicides containing chlorothalonil or mancozeb preventively.",
+            "Remove lower infected leaves to slow disease spread — sanitize tools between cuts.",
+            "Mulch around plants with straw or plastic to prevent soil splash.",
+            "Avoid overhead watering; water at the base in the morning to allow foliage to dry.",
+            "Stake plants to improve airflow and keep fruit off the ground.",
+            "Rotate with unrelated crops like brassicas or legumes for at least two years.",
+        ],
+        "recovery": "2-3 weeks with treatment",
+        "details": "Early blight (Alternaria solani) creates dark bull's-eye shaped lesions on older leaves, starting from the bottom of the plant.",
+    },
+    "Tomato Septoria leaf spot": {
+        "remedies": [
+            "Apply fungicides (chlorothalonil, copper) starting when first spots appear.",
+            "Remove and destroy infected lower leaves.",
+            "Mulch soil to prevent spore splash from soil to leaves.",
+            "Rotate crops and avoid planting tomatoes in the same spot yearly.",
+        ],
+        "recovery": "3-4 weeks",
+        "details": "Septoria leaf spot (Septoria lycopersici) creates circular spots with dark borders and grey centers, starting on lower leaves.",
+    },
+    "Tomato leaf": {
+        "remedies": [
+            "No treatment needed — your tomato plant looks healthy!",
+            "Continue preventive spray schedule and monitor regularly.",
+            "Ensure consistent watering and nutrition.",
+        ],
+        "recovery": "N/A",
+        "details": "The plant appears healthy with no visible signs of disease. Keep up the good work!",
+    },
+    "Tomato leaf bacterial spot": {
+        "remedies": [
+            "Apply copper-based bactericide sprays preventively.",
+            "Use pathogen-free or certified seed and transplants.",
+            "Avoid overhead irrigation and working with wet plants.",
+            "Rotate tomato crops with non-host crops for 2-3 years.",
+        ],
+        "recovery": "2-4 weeks with treatment",
+        "details": "Bacterial spot (Xanthomonas species) creates water-soaked spots that turn brown and scabby on leaves and fruit.",
+    },
+    "Tomato leaf late blight": {
+        "remedies": [
+            "Destroy all infected plant parts immediately to stop spread.",
+            "Apply specialized fungicides containing chlorothalonil or copper.",
+            "Avoid overhead irrigation and ensure plants are dry before nightfall.",
+            "Plant resistant tomato varieties in future seasons.",
+        ],
+        "recovery": "10-15 days with intensive treatment",
+        "details": "Late blight (Phytophthora infestans) spreads rapidly in cool, wet weather and can destroy entire crops within days if not controlled.",
+    },
+    "Tomato leaf mosaic virus": {
+        "remedies": [
+            "Remove and destroy all infected plants immediately.",
+            "Control aphid populations — they spread the virus.",
+            "Wash hands and sterilize tools before handling plants.",
+            "Plant certified virus-free seeds and resistant varieties.",
+        ],
+        "recovery": "No cure — prevention and removal are key",
+        "details": "Tomato mosaic virus causes mottled light and dark green patterns on leaves with distortion and stunting. It spreads easily through contact and tools.",
+    },
+    "Tomato leaf yellow virus": {
+        "remedies": [
+            "Control whitefly populations — they are the primary virus vector.",
+            "Use reflective mulches (silver/aluminum) to repel whiteflies from young plants.",
+            "Remove and destroy infected plants immediately (including roots) to prevent virus spread.",
+            "Plant resistant or tolerant tomato varieties (e.g., those with the Ty gene).",
+            "Install insect-proof netting (32-mesh or finer) for greenhouse plants.",
+            "Avoid weed hosts like nightshades near target crops.",
+        ],
+        "recovery": "No cure — infected plants should be removed",
+        "details": "Yellow Leaf Curl Virus (TYLCV) is transmitted by whiteflies. It causes severe stunting, yellow leaf curling, and dramatic yield reduction.",
+    },
+    "Tomato mold leaf": {
+        "remedies": [
+            "Improve greenhouse ventilation to reduce humidity below 85%.",
+            "Apply fungicides (chlorothalonil, mancozeb) at first sign of infection.",
+            "Avoid wetting foliage during irrigation.",
+            "Remove and destroy infected plant debris after harvest.",
+        ],
+        "recovery": "2-3 weeks",
+        "details": "Leaf mold (Passalora fulva) appears as pale green or yellow spots on upper leaf surfaces with olive-green mold on the underside.",
+    },
+    "grape leaf": {
+        "remedies": [
+            "No treatment needed — your grape plant looks healthy!",
+            "Maintain preventive spray schedule during humid periods.",
+            "Continue good canopy management practices.",
+        ],
+        "recovery": "N/A",
+        "details": "The plant appears healthy with no visible signs of disease. Keep monitoring regularly.",
+    },
+    "grape leaf black rot": {
+        "remedies": [
+            "Apply protective fungicides (mancozeb, myclobutanil) early in the season.",
+            "Remove and destroy all mummified berries and infected canes.",
+            "Ensure good canopy management for air circulation.",
+            "Avoid overhead irrigation to reduce leaf wetness.",
+        ],
+        "recovery": "Prevention focused — 2-4 weeks treatment window",
+        "details": "Grape black rot (Guignardia bidwellii) affects leaves, shoots, and berries, turning them black and shriveled (mummified).",
+    },
+    # ── Apple ─────────────────────────────────────────────────────────────────
     "Apple___Apple_scab": {
         "remedies": [
             "Apply fungicides (captan, myclobutanil) at green tip and throughout spring.",
@@ -610,8 +903,136 @@ def decode_image(data_url: str):
         raise ValueError(f"Could not decode image: {e}")
 
 
+# Plain-English label → (plant, disease) lookup for classes not using the ___ separator
+_PLAIN_LABEL_MAP = {
+    "Apple Scab Leaf":           ("Apple",  "Apple Scab"),
+    "Apple leaf":                ("Apple",  "Healthy"),
+    "Apple rust leaf":           ("Apple",  "Cedar Apple Rust"),
+    "Tomato Early blight leaf":  ("Tomato", "Early Blight"),
+    "Tomato Septoria leaf spot": ("Tomato", "Septoria Leaf Spot"),
+    "Tomato leaf":               ("Tomato", "Healthy"),
+    "Tomato leaf bacterial spot":("Tomato", "Bacterial Spot"),
+    "Tomato leaf late blight":   ("Tomato", "Late Blight"),
+    "Tomato leaf mosaic virus":  ("Tomato", "Tomato Mosaic Virus"),
+    "Tomato leaf yellow virus":  ("Tomato", "Yellow Leaf Curl Virus"),
+    "Tomato mold leaf":          ("Tomato", "Leaf Mold"),
+    "grape leaf":                ("Grape",  "Healthy"),
+    "grape leaf black rot":      ("Grape",  "Black Rot"),
+}
+
+
+def validate_is_plant_gemini(img) -> bool:
+    """Uses Gemini Vision to semantically verify if the main subject is a plant/leaf."""
+    api_key = os.getenv("GEMINI_API_KEY", "")
+    if not api_key:
+        return True  # Bypass if no key configured
+
+    try:
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+        
+        # Fast Heuristic: Reject solid colors (white, black, etc)
+        import numpy as np
+        img_np = np.array(img.convert("L"))
+        if np.std(img_np) < 5:
+            log.warning("Image rejected: Too uniform (solid color detected).")
+            return False
+
+        # Resize image for fast transmission (~40KB)
+        thumb = img.copy()
+        thumb.thumbnail((512, 512))
+        img_byte_arr = io.BytesIO()
+        thumb.save(img_byte_arr, format='JPEG', quality=80)
+        encoded = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
+        mime_type = "image/jpeg"
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+        payload = {
+            "contents": [{
+                "parts": [
+                    {"text": "Strictly analyze this image. Your goal is to identify if it is an up-close (macro) photo of a real living leaf, plant part, or crop for disease diagnosis. Reject everything else."},
+                    {"inlineData": {"mimeType": mime_type, "data": encoded}}
+                ]
+            }],
+            "generationConfig": {
+                "temperature": 0.0,
+                "responseMimeType": "application/json",
+                "responseSchema": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "is_plant": {
+                            "type": "BOOLEAN",
+                            "description": "True ONLY if a real plant, leaf, or crop is the clear, primary focal point. You MUST return False if it is: 1) A plain green texture/wall, 2) A landscape field from far away, 3) A human/animal, or 4) A non-biological object. There must be visible biological leaf features like veins, serrations, or distinct plant structures."
+                        }
+                    },
+                    "required": ["is_plant"]
+                }
+            }
+        }
+        res = requests.post(url, json=payload, timeout=10)
+        res.raise_for_status()
+        text = res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        data = json.loads(text)
+        return data.get("is_plant", False)
+    except Exception as e:
+        log.error(f"Gemini validation failed: {e}")
+        # Completely rely on Gemini API. Throw an error if the validation API drops.
+        raise ValueError("AI Validation Service is temporarily unavailable. Please try again.")
+
+
+def generate_dynamic_remedies_gemini(plant: str, disease: str, confidence: float, fallback_info: dict) -> dict:
+    """Uses Gemini to actively generate 5-7 point prevention and remedy rules for the specific disease detected."""
+    api_key = os.getenv("GEMINI_API_KEY", "")
+    if not api_key:
+        return fallback_info
+        
+    try:
+        model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        
+        is_healthy = "healthy" in disease.lower() or "healthy" in plant.lower()
+        if is_healthy:
+            prompt = (
+                f"A farmer's {plant} leaf scan returned healthy (confidence {confidence}%). "
+                "Provide exactly 5 to 7 brief, actionable points covering best practices to maintain health and prevent future diseases (Prevention Measures). "
+                "Format strict JSON: {\"remedies\": [\"point\", \"point\"], \"recovery\": \"N/A\", \"details\": \"1 summary sentence.\"}"
+            )
+        else:
+            prompt = (
+                f"A farmer's {plant} scan detected '{disease}' (confidence {confidence}%). "
+                "Provide exactly 5 to 7 brief, actionable points covering BOTH immediate remedies and future prevention measures. "
+                "Format strict JSON: {\"remedies\": [\"point\", \"point\"], \"recovery\": \"Estimated time (e.g. 7-14 days)\", \"details\": \"1-2 summary sentences.\"}"
+            )
+            
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"}
+        }
+        res = requests.post(url, json=payload, timeout=12)
+        res.raise_for_status()
+        text = res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        data = json.loads(text)
+        
+        if "remedies" in data and isinstance(data["remedies"], list) and len(data["remedies"]) > 0:
+            return {
+                "remedies": data["remedies"][:7],
+                "recovery": data.get("recovery", fallback_info["recovery"]),
+                "details": data.get("details", fallback_info["details"])
+            }
+    except Exception as e:
+        log.warning(f"Dynamic remedies failed: {e}")
+        
+    return fallback_info
+
+
+
 def class_name_to_label(class_name: str):
-    """'Tomato___Late_blight' -> ('Tomato', 'Late Blight')"""
+    """
+    Converts a raw class name to (plant, disease) tuple.
+    Handles both 'Plant___Disease' format and plain-English labels.
+    """
+    if class_name in _PLAIN_LABEL_MAP:
+        return _PLAIN_LABEL_MAP[class_name]
+    # Standard PlantVillage format: 'Tomato___Late_blight'
     parts = class_name.split("___")
     plant = parts[0].replace("_", " ").strip()
     disease = parts[1].replace("_", " ").strip() if len(parts) > 1 else "Unknown"
@@ -647,6 +1068,13 @@ def predict():
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
 
+        # Semantic Out-of-Distribution Validation via Gemini
+        is_plant = validate_is_plant_gemini(img)
+        if not is_plant:
+            return jsonify({
+                "error": "Image rejected: No clear plant or leaf detected. Please upload an image primarily focusing on a crop."
+            }), 400
+
         tensor = transform(img).unsqueeze(0)
 
         with torch.no_grad():
@@ -669,7 +1097,7 @@ def predict():
             })
 
         plant, disease = class_name_to_label(best_class)
-        info = REMEDIES_DB.get(best_class, {
+        fallback_info = REMEDIES_DB.get(best_class, {
             "remedies": [
                 "Consult a local agricultural expert for proper diagnosis.",
                 "Isolate the affected plant to prevent potential spread.",
@@ -678,6 +1106,9 @@ def predict():
             "recovery": "Varies by treatment",
             "details": f"Disease detected: {disease} on {plant}.",
         })
+        
+        # Dynamically generate 5-7 Remedy & Prevention points using Gemini
+        info = generate_dynamic_remedies_gemini(plant, disease, confidence, fallback_info)
 
         log.info(f"Prediction: {best_class} ({confidence}%)")
 
@@ -758,6 +1189,15 @@ def batch_predict():
             }
             try:
                 img = decode_image(photo["image"])
+                
+                # Semantic Out-of-Distribution Validation via Gemini
+                is_plant = validate_is_plant_gemini(img)
+                if not is_plant:
+                    entry["error"] = "No plant detected. Please upload a clear plant photo."
+                    log.warning(f"Batch photo '{entry['label']}' rejected: No plant detected.")
+                    results.append(entry)
+                    continue
+
                 tensor = transform(img).unsqueeze(0)
                 with torch.no_grad():
                     logits = model(tensor)

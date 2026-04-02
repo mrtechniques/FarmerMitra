@@ -86,6 +86,7 @@ function AppContent() {
             onBack={() => setCurrentPage('scan')}
             onScanAgain={() => setCurrentPage('scan')}
             onAskAgent={() => handleAskAgent(currentResult)}
+            onViewHistory={() => setCurrentPage('history')}
           />
         ) : (
           <Home onStartScan={() => setCurrentPage('scan')} onChatAgent={() => setCurrentPage('agent')} />

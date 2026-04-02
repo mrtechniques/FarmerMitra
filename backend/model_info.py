@@ -5,7 +5,7 @@ Run: python backend/model_info.py
 import torch
 import os
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "trained_model_weights.pth")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "farmer-mitra_weights.pth")
 
 def inspect_model():
     print(f"Loading checkpoint from: {MODEL_PATH}")

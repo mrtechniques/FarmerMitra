@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   ShieldCheck, Clock, AlertCircle, CheckCircle2,
-  ArrowLeft, Leaf, MessageSquare
+  ArrowLeft, Leaf, MessageSquare, Camera
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ScanResult } from '../types';
@@ -12,9 +12,10 @@ interface ResultsProps {
   onBack: () => void;
   onScanAgain: () => void;
   onAskAgent: () => void;
+  onViewHistory: () => void;
 }
 
-export default function Results({ result, onBack, onScanAgain, onAskAgent }: ResultsProps) {
+export default function Results({ result, onBack, onScanAgain, onAskAgent, onViewHistory }: ResultsProps) {
   const { t } = useLanguage();
   const isHealthy = result.rawClass?.includes('healthy') || result.disease.toLowerCase().includes('healthy');
   const statusColor = isHealthy ? '#4a8c2a' : '#ef4444';
@@ -77,7 +78,7 @@ export default function Results({ result, onBack, onScanAgain, onAskAgent }: Res
         {/* Stats Strip */}
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-2 gap-4"
+          className="grid grid-cols-2 lg:grid-cols-3 gap-4"
         >
           {/* Plant */}
           <div className="p-6 rounded-xl border border-divider bg-surface" style={{ borderLeft: `4px solid ${statusColor}` }}>
@@ -89,6 +90,23 @@ export default function Results({ result, onBack, onScanAgain, onAskAgent }: Res
           <div className="p-6 rounded-xl border border-divider bg-surface">
             <p className="text-xs text-text-secondary uppercase tracking-widest mb-1 font-semibold">{t('expRecovery')}</p>
             <p className="text-xl font-bold text-text-primary leading-tight">{result.recoveryTime || t('recoveryVaries')}</p>
+          </div>
+
+          {/* AI Confidence */}
+          <div className="p-6 rounded-xl border border-divider bg-surface col-span-2 lg:col-span-1">
+            <p className="text-xs text-text-secondary uppercase tracking-widest mb-1 font-semibold">AI Confidence</p>
+            <div className="flex items-center gap-2">
+              <p className="text-2xl font-bold text-text-primary">{result.confidence}%</p>
+              <div className="flex-1 h-2 bg-divider rounded-full overflow-hidden ml-2">
+                <div 
+                  className="h-full rounded-full transition-all duration-1000"
+                  style={{ 
+                    width: `${result.confidence}%`,
+                    backgroundColor: result.confidence > 85 ? '#4a8c2a' : (result.confidence > 60 ? '#f59e0b' : '#ef4444')
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -138,14 +156,30 @@ export default function Results({ result, onBack, onScanAgain, onAskAgent }: Res
             {/* Action Buttons */}
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-              className="grid grid-cols-1 gap-3"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3"
             >
               <button
                 onClick={onAskAgent}
-                className="w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 border-2 border-deep-green text-deep-green hover:bg-deep-green hover:text-white transition-all active:scale-95 bg-white shadow-sm"
+                className="w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 border-2 border-deep-green text-deep-green hover:bg-deep-green hover:text-white transition-all active:scale-95 bg-white shadow-sm sm:col-span-2 lg:col-span-1"
               >
                 <MessageSquare className="w-5 h-5" />
                 {t('askHelp')}
+              </button>
+              
+              <button
+                onClick={onScanAgain}
+                className="w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 bg-surface-alt text-text-primary hover:bg-deep-green hover:text-white hover:border-deep-green border-2 border-divider transition-all active:scale-95 shadow-sm"
+              >
+                <Camera className="w-5 h-5" />
+                {t('scanAnother')}
+              </button>
+
+              <button
+                onClick={onViewHistory}
+                className="w-full py-6 rounded-2xl font-black text-2xl flex items-center justify-center gap-4 bg-white text-text-primary hover:bg-deep-green hover:text-white hover:border-deep-green transition-all active:scale-95 shadow-xl border-2 border-divider"
+              >
+                <Clock className="w-7 h-7" />
+                {t('historyTitle')}
               </button>
             </motion.div>
           </div>

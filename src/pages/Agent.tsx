@@ -17,8 +17,8 @@ interface AgentProps {
   onClearContext?: () => void;
 }
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+const GEMINI_MODEL = (import.meta.env.VITE_GEMINI_MODEL as string) || 'gemini-2.0-flash';
 
 const QUICK_PROMPTS = [
   { icon: Bug, label: 'diagPlant', text: 'diagPlantQuery' },
@@ -67,7 +67,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-black/5 text-text-secondary"
+      className="transition-opacity p-1.5 rounded-lg hover:bg-black/5 text-text-secondary"
       title="Copy"
     >
       {copied ? <Check className="w-3.5 h-3.5 text-accent-green" /> : <Copy className="w-3.5 h-3.5" />}
@@ -91,7 +91,7 @@ function SpeakButton({ text }: { text: string }) {
   return (
     <button
       onClick={handlePlay}
-      className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-black/5 ${isPlaying ? 'text-accent-green' : 'text-text-secondary'}`}
+      className={`transition-opacity p-1.5 rounded-lg hover:bg-black/5 ${isPlaying ? 'text-accent-green' : 'text-text-secondary'}`}
       title={isPlaying ? "Stop Speaking" : "Read Aloud"}
     >
       <Volume2 className="w-3.5 h-3.5" />
@@ -112,10 +112,10 @@ ${initialContext ? `The farmer just scanned a plant and got this result:
 - Recommended Remedies: ${initialContext.remedies.join('; ')}
 Start by acknowledging this diagnosis and offering to help with follow-up questions.` : 'Greet the farmer warmly and offer to help with plant diseases or farming advice.'}
 
-Keep responses concise (2-4 sentences), friendly, and practical. Use simple language suitable for farmers.`;
+Keep responses concise (2-4 sentences), friendly, and practical. Use simple language suitable for farmers. Do not use markdown formatting like ** or #.`;
 
   const welcomeText = initialContext
-    ? `I can see your **${initialContext.leafType}** was diagnosed with **${initialContext.disease}** (${initialContext.confidence}% confidence). I'm here to help! What would you like to know about treatment or prevention?`
+    ? `I can see your ${initialContext.leafType} was diagnosed with ${initialContext.disease} (${initialContext.confidence}% confidence). I'm here to help! What would you like to know about treatment or prevention?`
     : t('botWelcome');
 
   const [messages, setMessages] = useState<Message[]>([
@@ -350,9 +350,11 @@ Keep responses concise (2-4 sentences), friendly, and practical. Use simple lang
                       </div>
                     ) : (
                       <>
-                        <p className="whitespace-pre-wrap">{msg.text}</p>
+                        <p className={`whitespace-pre-wrap ${msg.sender === 'bot' ? 'pr-16' : ''}`}>
+                          {msg.text.replace(/\*\*/g, '')}
+                        </p>
                         {msg.sender === 'bot' && (
-                          <div className="absolute top-2 right-2 flex items-center bg-white/80 rounded-lg shadow-sm border border-divider/50">
+                          <div className="absolute top-2 right-2 flex items-center bg-white/90 backdrop-blur-sm rounded-lg shadow-sm border border-divider/50">
                             <SpeakButton text={msg.text} />
                             <CopyButton text={msg.text} />
                           </div>

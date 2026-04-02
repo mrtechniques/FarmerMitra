@@ -113,9 +113,10 @@ export default function FieldMapSection() {
 
             resultsMap[photo.id] = zone;
             setAnalysisResults(prev => ({ ...prev, [photo.id]: zone }));
-          } catch {
+          } catch (e: any) {
+            const errorMsg = e.message?.includes('Image rejected') ? 'Not a Leaf' : 'Error';
             resultsMap[photo.id] = 'error';
-            setAnalysisResults(prev => ({ ...prev, [photo.id]: 'error' }));
+            setAnalysisResults(prev => ({ ...prev, [photo.id]: errorMsg as any }));
           }
         })
       );
@@ -212,12 +213,12 @@ export default function FieldMapSection() {
   const renderPrivacyToggle = () => (
     <button
       onClick={consent === 'granted' ? denyConsent : grantConsent}
-      className="flex items-center gap-2 text-xs text-text-secondary hover:text-deep-green transition-colors"
+      className="flex items-center gap-2 text-xs text-white/90 hover:text-white transition-colors bg-white/10 px-3 py-1.5 rounded-full border border-white/10"
       title={consent === 'granted' ? 'Click to disable scan history' : 'Click to enable scan history'}
     >
       {consent === 'granted'
-        ? <><ToggleRight className="w-4 h-4 text-deep-green" /><span>Scan history: <strong className="text-deep-green">On</strong></span></>
-        : <><ToggleLeft className="w-4 h-4" /><span>Scan history: Off</span></>
+        ? <><ToggleRight className="w-4 h-4 text-accent-green" /><span>Scan history: <strong className="text-white">On</strong></span></>
+        : <><ToggleLeft className="w-4 h-4 text-white/50" /><span>Scan history: <span className="text-white/70">Off</span></span></>
       }
     </button>
   );

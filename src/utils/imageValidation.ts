@@ -48,53 +48,85 @@ export async function checkIsLeaf(dataUrl: string): Promise<boolean> {
 
   if (apiKey) {
     try {
-      const base64 = dataUrl.split(',')[1];
-      const mime = dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
-      const prompt =
-        'Look at this image carefully. Does it show a plant leaf (healthy or diseased)? Reply with ONLY the single word YES or NO.';
+      // 1. Resize image aggressively to 512px before sending to Gemini
+      const resizedBase64 = await new Promise<string>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const scale = Math.min(1, 512 / Math.max(img.width, img.height));
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          // Heuristic: Reject solid colors (variance check)
+          const pixelData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+          let sum = 0, sumSq = 0;
+          for (let i = 0; i < pixelData.length; i += 4) {
+            const brightness = (pixelData[i] + pixelData[i+1] + pixelData[i+2]) / 3;
+            sum += brightness;
+            sumSq += brightness * brightness;
+          }
+          const n = pixelData.length / 4;
+          const variance = (sumSq / n) - (Math.pow(sum / n, 2));
+          if (variance < 10) {
+            console.warn("Image rejected: Too uniform (solid color detected).");
+            return resolve("REJECT_UNIFORM");
+          }
+
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+
+      const resizedResult = await resizedBase64;
+      if (resizedResult === "REJECT_UNIFORM") return false;
+
+      const base64 = (resizedResult as string).split(',')[1];
+      const mime = 'image/jpeg';
+      
+      const prompt = "Strictly analyze this image. Identify if it is an up-close (macro) photo of a real living plant leaf or crop for diagnosis. Reject if it is just a green texture, far-away scenery, a human, animal, or object.";
+        
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: mime, data: base64 } }] }],
-            generationConfig: { maxOutputTokens: 10, temperature: 0 },
+            contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: base64 } }] }],
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  isPlant: {
+                    type: "BOOLEAN",
+                    description: "True ONLY if a real plant leaf is the primary, clear subject. MUST return False if it is: 1) Plain green background/texture, 2) Distant landscape, 3) Human hands/limbs, or 4) Not a leaf. Look for veins, serrated edges, or biological plant structures."
+                  }
+                },
+                required: ["isPlant"]
+              }
+            },
           }),
         }
       );
       if (res.ok) {
         const data = await res.json();
-        const raw = (data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim().toUpperCase();
-        return /YES|LEAF|PLANT|TRUE/.test(raw);
+        const output = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (output) {
+          const parsed = JSON.parse(output);
+          return !!parsed.isPlant;
+        }
       }
-    } catch { /* fall through */ }
+    } catch (e) {
+      console.warn("Frontend validation failed:", e);
+    }
   }
 
-  // Colour heuristic fallback
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 128; canvas.height = 128;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, 128, 128);
-      const { data } = ctx.getImageData(0, 0, 128, 128);
-      let leafPixels = 0, total = 0;
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
-        if (a < 50) continue;
-        total++;
-        const isGreen  = g > r * 1.05 && g > b * 1.05 && g > 30;
-        const isYellow = r > 100 && g > 100 && b < 100 && Math.abs(r - g) < 40;
-        const isBrown  = r > 40 && g > 30 && b < 50 && r > b * 1.2;
-        if (isGreen || isYellow || isBrown) leafPixels++;
-      }
-      resolve(total > 0 ? leafPixels / total >= 0.12 : true);
-    };
-    img.onerror = () => resolve(true);
-    img.src = dataUrl;
-  });
+  // Fallback: If API fails, we reject it (Fail-Closed).
+  return false;
 }
 
 // ─── Full validation pipeline ─────────────────────────────────────────────────
