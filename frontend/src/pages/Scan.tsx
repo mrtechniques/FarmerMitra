@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Camera, X, Loader2, Image as ImageIcon, Leaf, Eye, RefreshCw, AlertTriangle, Wheat, Lightbulb } from 'lucide-react';
+import { Upload, Camera, X, Loader2, Image as ImageIcon, Leaf, Eye, RefreshCw, AlertTriangle, Wheat, Lightbulb, ArrowRight, MapPinned } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../hooks/useLanguage';
-import FieldMapSection from '../components/FieldMapSection';
 import { getSharpnessScore, checkIsLeaf } from '../utils/imageValidation';
 
 // ─────────────────────────────────────────────────────────────
@@ -99,9 +98,10 @@ function ValidationModal({
 interface ScanProps {
   onAnalyze: (image: string) => Promise<void>;
   analyzeError?: string | null;
+  onOpenLargeFarm: () => void;
 }
 
-export default function Scan({ onAnalyze, analyzeError }: ScanProps) {
+export default function Scan({ onAnalyze, analyzeError, onOpenLargeFarm }: ScanProps) {
   const { t } = useLanguage();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -362,24 +362,60 @@ export default function Scan({ onAnalyze, analyzeError }: ScanProps) {
         )}
       </AnimatePresence>
 
-      {/* ── Large Farm Survey ─────────────────────────────────────────────── */}
+      {/* ── Large Farm Survey Entry ───────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
         className="mt-20"
       >
-        {/* Divider */}
         <div className="flex items-center gap-4 mb-8">
           <div className="flex-1 h-px bg-divider" />
           <div className="flex items-center gap-2 px-4 py-2 bg-surface-alt border border-divider rounded-full text-sm font-bold text-text-secondary">
             <Wheat className="w-5 h-5" />
-            Large Farm? Survey multiple fields at once
+            Large Farm Survey
           </div>
           <div className="flex-1 h-px bg-divider" />
         </div>
 
-        <FieldMapSection />
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-divider bg-[linear-gradient(135deg,#ffffff_0%,#f8faf5_55%,rgba(163,199,109,0.14)_100%)] p-8 shadow-soft">
+          <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-accent-green/25 blur-3xl" />
+          <div className="absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-deep-green/10 blur-3xl" />
+
+          <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-deep-green/8 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-deep-green">
+                <MapPinned className="h-4 w-4" />
+                Dedicated Workspace
+              </div>
+              <h3 className="text-3xl font-black tracking-tight text-text-primary">
+                Survey multiple fields in a full-screen farm workflow
+              </h3>
+              <p className="mt-3 text-base leading-relaxed text-text-secondary">
+                Open the large farm survey in its own page to upload many GPS-tagged images, map disease spread, compare batches, and view farm-level risk without crowding the normal scan screen.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:w-[340px]">
+              <div className="rounded-[1.5rem] border border-divider bg-white/90 px-5 py-4 shadow-sm">
+                <p className="text-sm font-black text-text-primary">Batch upload</p>
+                <p className="mt-1 text-xs leading-relaxed text-text-secondary">Analyze multiple field sections at once.</p>
+              </div>
+              <div className="rounded-[1.5rem] border border-divider bg-white/90 px-5 py-4 shadow-sm">
+                <p className="text-sm font-black text-text-primary">Farm map view</p>
+                <p className="mt-1 text-xs leading-relaxed text-text-secondary">See spread, hotspots, and nearby risk clearly.</p>
+              </div>
+
+              <button
+                onClick={onOpenLargeFarm}
+                className="sm:col-span-2 inline-flex items-center justify-center gap-3 rounded-full bg-deep-green px-8 py-4 text-lg font-black text-white shadow-xl transition-all hover:bg-muted-green active:scale-[0.98]"
+              >
+                Open Large Farm Survey
+                <ArrowRight className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
       </motion.div>
     </div>
   );

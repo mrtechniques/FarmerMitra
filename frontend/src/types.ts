@@ -1,4 +1,4 @@
-export type Page = 'home' | 'scan' | 'results' | 'history' | 'agent';
+export type Page = 'home' | 'scan' | 'results' | 'history' | 'agent' | 'large-farm';
 
 export interface Top3Prediction {
   class: string;

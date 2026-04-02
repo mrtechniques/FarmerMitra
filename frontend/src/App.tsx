@@ -12,6 +12,7 @@ import Scan from './pages/Scan';
 import Results from './pages/Results';
 import History from './pages/History';
 import Agent from './pages/Agent';
+import LargeFarm from './pages/LargeFarm';
 import { Page, ScanResult } from './types';
 import { LanguageProvider, useLanguage } from './hooks/useLanguage';
 
@@ -78,7 +79,7 @@ function AppContent() {
           />
         );
       case 'scan':
-        return <Scan onAnalyze={handleAnalyze} analyzeError={analyzeError} />;
+        return <Scan onAnalyze={handleAnalyze} analyzeError={analyzeError} onOpenLargeFarm={() => setCurrentPage('large-farm')} />;
       case 'results':
         return currentResult ? (
           <Results
@@ -104,6 +105,8 @@ function AppContent() {
         );
       case 'agent':
         return <Agent initialContext={agentContext} onClearContext={() => setAgentContext(null)} />;
+      case 'large-farm':
+        return <LargeFarm onBack={() => setCurrentPage('scan')} />;
       default:
         return <Home onStartScan={() => setCurrentPage('scan')} onChatAgent={() => setCurrentPage('agent')} />;
     }
@@ -133,7 +136,7 @@ function AppContent() {
         </AnimatePresence>
       </main>
 
-      {currentPage !== 'agent' && <Footer />}
+      {currentPage !== 'agent' && currentPage !== 'large-farm' && <Footer />}
     </div>
   );
 }

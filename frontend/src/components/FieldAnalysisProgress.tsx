@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Loader2, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { FieldPhoto, FieldZoneResult } from '../types';
@@ -11,6 +11,41 @@ interface FieldAnalysisProgressProps {
 
 export default function FieldAnalysisProgress({ photos, results, total }: FieldAnalysisProgressProps) {
   const done = Object.keys(results).length;
+  const actualProgress = total > 0 ? (done / total) * 100 : 0;
+  const [visualProgress, setVisualProgress] = useState(actualProgress);
+
+  useEffect(() => {
+    if (total === 0) {
+      setVisualProgress(0);
+      return;
+    }
+
+    if (done >= total) {
+      setVisualProgress(100);
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setVisualProgress(prev => {
+        const baseline = Math.max(prev, actualProgress);
+        if (baseline >= 92) return baseline;
+
+        // Keep the bar moving during batch inference even when the backend
+        // only returns all results at the end.
+        const step = baseline < 20 ? 8 : baseline < 45 ? 5 : baseline < 70 ? 3 : 1.5;
+        return Math.min(92, baseline + step);
+      });
+    }, 350);
+
+    return () => window.clearInterval(timer);
+  }, [actualProgress, done, total]);
+
+  useEffect(() => {
+    setVisualProgress(prev => {
+      if (done >= total && total > 0) return 100;
+      return Math.max(prev, actualProgress);
+    });
+  }, [actualProgress, done, total]);
 
   return (
     <div className="space-y-6">
@@ -18,18 +53,22 @@ export default function FieldAnalysisProgress({ photos, results, total }: FieldA
       <div>
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-bold text-text-secondary uppercase tracking-wider">Analyzing fields</span>
-          <span className="text-sm font-black text-deep-green">{done} / {total}</span>
+          <span className="text-sm font-black text-deep-green">
+            {done < total ? `${Math.round(visualProgress)}%` : `${done} / ${total}`}
+          </span>
         </div>
         <div className="w-full bg-bg-nature h-3 rounded-full overflow-hidden shadow-inner">
           <motion.div
             className="h-full rounded-full hero-gradient"
             initial={{ width: 0 }}
-            animate={{ width: `${total > 0 ? (done / total) * 100 : 0}%` }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
+            animate={{ width: `${visualProgress}%` }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
           />
         </div>
         {done < total && (
-          <p className="text-xs text-text-secondary mt-2">Please wait — running disease detection on each photo…</p>
+          <p className="text-xs text-text-secondary mt-2">
+            Please wait — running disease detection on each photo and preparing the field map…
+          </p>
         )}
       </div>
 

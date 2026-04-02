@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Leaf, Home, History, MessageSquare, Scan, Globe, ChevronDown, Bot } from 'lucide-react';
+import { Leaf, Home, History, MessageSquare, Scan, Globe, ChevronDown, Bot, Wheat } from 'lucide-react';
 import { Page } from '../types';
 import { useLanguage, Language } from '../hooks/useLanguage';
 import { motion, AnimatePresence } from 'motion/react';
@@ -16,6 +16,7 @@ export default function Navbar({ currentPage, onPageChange }: NavbarProps) {
   const navItems = [
     { id: 'home', label: t('home'), icon: Home },
     { id: 'scan', label: t('scan'), icon: Scan },
+    { id: 'large-farm', label: 'Large Farm', icon: Wheat },
     { id: 'history', label: t('history'), icon: History },
     { id: 'agent', label: t('agent'), icon: Bot },
   ];
