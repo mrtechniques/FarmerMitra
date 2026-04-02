@@ -19,4 +19,3 @@ secrets/
 __pycache__/
 *.pyc
 .vite/
-*.pth
