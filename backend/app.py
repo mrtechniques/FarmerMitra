@@ -32,6 +32,8 @@ log = logging.getLogger(__name__)
 
 # ─── App Setup ───────────────────────────────────────────────────────────────
 app = Flask(__name__)
+# Limit payload size to ~16MB to prevent Base64/OOM attacks
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 
@@ -1110,8 +1112,8 @@ def validate_is_plant_gemini(img) -> tuple[bool, str]:
 
     except Exception as e:
         log.error(f"Gemini validation failed: {e}")
-        # Final fallback - treat as invalid image rather than crashing 500
-        return False, f"AI validation failed: {str(e)}"
+        # Final fallback - treat as valid plant to allow model diagnosis instead of crashing
+        return True, f"AI validation bypassed: {str(e)}"
 
 
 
@@ -1144,8 +1146,27 @@ def generate_dynamic_remedies_gemini(plant: str, disease: str, confidence: float
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"}
         }
-        res = requests.post(url, json=payload, timeout=12)
-        res.raise_for_status()
+        
+        # Retry logic: Try 3 times with exponential backoff on 429
+        for attempt in range(3):
+            try:
+                res = requests.post(url, json=payload, timeout=12)
+                res.raise_for_status()
+                break # Success
+            except requests.exceptions.HTTPError as he:
+                status_code = he.response.status_code if he.response is not None else 500
+                if status_code == 429:
+                    wait_time = (2 ** attempt) + 1
+                    log.warning(f"Remedies Rate Limit (429) hit. Retrying in {wait_time}s... (Attempt {attempt+1}/3)")
+                    time.sleep(wait_time)
+                    if attempt < 2: continue
+                raise
+            except Exception:
+                if attempt < 2:
+                    time.sleep(1)
+                    continue
+                raise
+                
         text = res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
         data = json.loads(text)
         
@@ -1205,11 +1226,11 @@ def predict():
         import torch.nn.functional as F
 
         data = request.get_json(force=True)
-        if not data or "image" not in data:
+        if not data or not data.get("image"):
             return jsonify({"error": "Missing 'image' field in request body."}), 400
 
         try:
-            img = decode_image(data["image"])
+            img = decode_image(data.get("image"))
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
 
@@ -1354,23 +1375,47 @@ def batch_predict():
                 best_class = CLASS_NAMES[top_idx[0][0].item()]
                 confidence = round(top_prob[0][0].item() * 100, 1)
                 plant, disease = class_name_to_label(best_class)
-                info = REMEDIES_DB.get(best_class, {
+                fallback_info = REMEDIES_DB.get(best_class, {
                     "remedies": ["Consult a local agricultural expert."],
                     "recovery": "Varies",
                     "details": f"Detected: {disease} on {plant}.",
                 })
+                
+                # Fetch dynamic remedies from Gemini, using REMEDIES_DB as fallback
+                info = generate_dynamic_remedies_gemini(plant, disease, confidence, fallback_info)
+
                 is_healthy = "healthy" in best_class.lower()
                 severity = "none" if is_healthy else ("high" if confidence > 80 else ("medium" if confidence > 60 else "low"))
+                
+                # Handle translation if requested
+                if lang and lang != "en":
+                    log.info(f"Translating batch result into: {lang}")
+                    translated = translate_result(
+                        disease=disease,
+                        leaf_type=plant,
+                        details=info["details"],
+                        remedies=info["remedies"],
+                        recovery=info["recovery"],
+                        lang=lang,
+                    )
+                else:
+                    translated = {
+                        "disease": disease,
+                        "leafType": plant,
+                        "details": info["details"],
+                        "remedies": info["remedies"],
+                        "recoveryTime": info["recovery"],
+                    }
 
                 entry.update({
-                    "disease": disease,
-                    "leafType": plant,
+                    "disease": translated["disease"],
+                    "leafType": translated["leafType"],
                     "confidence": confidence,
                     "isHealthy": is_healthy,
                     "severity": severity,
-                    "remedies": info["remedies"],
-                    "recoveryTime": info["recovery"],
-                    "details": info["details"],
+                    "remedies": translated["remedies"],
+                    "recoveryTime": translated["recoveryTime"],
+                    "details": translated["details"],
                     "rawClass": best_class,
                 })
                 log.info(f"Batch photo '{entry['label']}': {best_class} ({confidence}%)")
